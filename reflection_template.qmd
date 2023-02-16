@@ -11,7 +11,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an A.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from a Lab or Challenge assignment where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -19,19 +19,21 @@ execute:
 
 **WD-1: I can import data from a *variety* of formats (e.g., csv, xlsx, txt, etc.).**
 
--   `csv`
+-   `csv`\
+    Code comes from Challenge 4 - Data Importing
 
 ```{r wd-1-csv}
-
+avocado <- read_csv(here("Labs", "Lab 4", "avocado.csv"))
+prices <- read_csv("https://raw.githubusercontent.com/salitog/STATS331/main/HistoricalPrices.csv")
 ```
 
--   `xlsx`
+-   `xlsx`Code from
 
 ```{r wd-1-xlsx}
 
 ```
 
--   `txt`
+-   `txt`Code from
 
 ```{r wd-1-txt}
 
@@ -39,83 +41,137 @@ execute:
 
 **WD-2: I can select necessary columns from a dataset.**
 
-```{r wd-2}
+Code from Challenge 4 - Analysis
 
+```{r wd-2}
+avocado_size_mill <- millennials |>
+  pivot_longer(cols = Small:XLarge,
+               names_to = "AvocadoSize",
+               values_to = "SizeSales") |>
+ select(Date, Region, AveragePrice, `Total Volume`, Type:SizeSales)
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   numeric
+-   numeric\
+    Code comes from Lab 3 - Question 14
 
 ```{r wd-3-numeric}
-
+hiphop_clean |>
+  select(c("subj", "sex", "age", "ethnic_ctgr", "city", "bieber", "pop")) |>
+  filter(ethnic_ctgr == "white",
+           sex == "Male",
+           age >= 17, 
+           age <= 23,
+           city >= 10000,
+           city <= 60000) |>
+  slice_max(order_by = bieber, n = 1) |>
+  distinct(subj, .keep_all = TRUE)
 ```
 
--   character -- specifically a string
+-   character -- specifically a string\
+    Code from Lab 4 - Question 2
 
 ```{r wd-3-string}
+# Dataframe for state related sales
+state_sales <- avocado_clean |>
+  filter(region %in% c("California", "SouthCarolina", "NewYork", "WestTexNewMexico"))
 
 ```
 
--   factor
+-   factor\
+    Code from Lab 3 - Question 12
 
 ```{r wd-3-factor}
-
+hiphop_clean |>
+  filter(ethnic_ctgr == "non-white", sex == "Female") |> # ethnic_ctgr and sex are factors
+  group_by(word) |>
+  summarize(mean_fam = mean(familiarity)) |>
+  filter(mean_fam == min(mean_fam) |
+           mean_fam == max(mean_fam)) |>
+  arrange(desc(mean_fam))
 ```
 
--   date
+-   date\
+    Code from Lab 5 - Question 2
 
 ```{r wd-3-date}
-
+rodents <- surveys_summary |>
+  mutate(day_of_week = weekdays(Date)) |> # Date is of Date type
+  filter(taxa == "Rodent",
+         !is.na(day_of_week)) |>
+  group_by(day_of_week) |>
+  summarize(count = n())
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   numeric
+-   numeric\
+    Code from Challenge 4 - Analysis
 
 ```{r wd-4-numeric}
-
+avocado_diff <- millennials |>
+  select(Date, Year, Region, Small, Large, `Sales%Change`) |>
+  filter(Year == 2017) |>
+  mutate(AvocadoSizeDiff = Large - Small, # Difference between Large and Small avocado sales
+         AvocadoSizeDiff = scale(AvocadoSizeDiff), # Standardizing SalesDiff
+         HousingSaleDiff = scale(`Sales%Change`))
 ```
 
--   character -- specifically a string
+-   character -- specifically a string\
+    Code from Lab 3 - Question 7
 
 ```{r wd-4-string}
-
+hiphop_clean <- hiphop_clean |>
+  mutate(ethnic_ctgr = if_else(ethnic == "white", "white", "non-white"))
 ```
 
--   factor
+-   factor\
+    Code from Lab 4 - Question 2
 
 ```{r wd-4-factor}
-
+avocado_clean <- avocado |>
+  mutate(type = as.factor(type),
+         region = as.factor(region))
 ```
 
--   date
+-   date\
+    Code from Lab 5 - Question 1
 
 ```{r wd-4-date}
-
+surveys_summary <- surveys |>
+  mutate(Date = ymd(paste(year, month, day, sep = "-")))
 ```
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
 
--   `left_join()`
+-   `left_join()` \
+    Code from Lab 4 - Question 5
 
 ```{r wd-5-left}
-
+joined_top_metro <- top5_metro_sellers |>
+  left_join(metro_region_sales, by = "region") |>
+  select(region, `Total Volume`)
 ```
 
--   `right_join()`
+-   `right_join()` \
+    Code from Challenge 4 - Joining Data
 
 ```{r wd-5-right}
-
+housing <- housing_sales |>
+  right_join(housing_prices, 
+            by = c("Month", "Year", "Region"))
 ```
 
--   `inner_join()`
+-   `inner_join()` \
+    Code from
 
 ```{r wd-5-inner}
 
 ```
 
--   `full_join()`
+-   `full_join()` \
+    Code from
 
 ```{r wd-5-full}
 
@@ -123,30 +179,48 @@ execute:
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
 
--   `semi_join()`
+-   `semi_join()` \
+    Code from
 
 ```{r wd-6-semi}
 
 ```
 
--   `anti_join()`
+-   `anti_join()` \
+    Code from Lab 4 - Question 2
 
 ```{r wd-6-anti}
-
+# Dataframe for only metropolitan areas (cities)
+metro_region_sales <- avocado_clean |>
+  anti_join(total_us_sales) |> 
+  anti_join(major_region_sales) |>
+  anti_join(state_sales)
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
 
--   `pivot_longer()`
+-   `pivot_longer()` \
+    Code from Challenge 4 - Analysis
 
 ```{r wd-7-long}
-
+avocado_size_mill <- millennials |>
+  pivot_longer(cols = Small:XLarge,
+               names_to = "AvocadoSize",
+               values_to = "SizeSales") |>
+ select(Date, Region, AveragePrice, `Total Volume`, Type:SizeSales)
 ```
 
--   `pivot_wider()`
+-   `pivot_wider()` \
+    Code from Lab 4 - Question 6
 
 ```{r wd-7-wide}
-
+df_q6 <- california |>
+  select(Date, AveragePrice, type, region) |> # select only necessary
+  pivot_wider(names_from = type, # Get conventional and organic avg price on the same line
+              values_from = AveragePrice) |>
+  mutate(diff = abs(conventional - organic)) |> # Calculate the difference
+  group_by(region) |> # group by region and not date
+  summarize(`mean diff` = mean(diff)) # calculate mean of difference
 ```
 
 ## Reproducibility
@@ -157,27 +231,66 @@ I've done this in the following provided assignments:
 
 **R-2: I can write well documented and tidy code.**
 
--   Example 1
+-   Example 1\
+    Code from Lab 4 - Question 6
 
 ```{r r-2-1}
-
+df_q6 <- california |>
+  select(Date, AveragePrice, type, region) |> # select only necessary
+  pivot_wider(names_from = type, # Get conventional and organic avg price on the same line
+              values_from = AveragePrice) |>
+  mutate(diff = abs(conventional - organic)) |> # Calculate the difference
+  group_by(region) |> # group by region and not date
+  summarize(`mean diff` = mean(diff)) # calculate mean of difference
 ```
 
--   Example 2
+-   Example 2\
+    Code from Lab 3 - Question 3
 
 ```{r r-2-2}
+hiphop |>
+  group_by(word) |>
+  summarize(num_subjects = n()) 
 
+# n() gotten from https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/summarise
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
 
--   Example 1
+-   Example 1\
+    Code from Challenge 4 - Data Importing
 
 ```{r r-3-1}
+clean_housing <- function(dataset, gsub_expr) {
+  dataset |>
+    separate(col = `Mon-Yr`,
+             into = c("Month", "Year"),
+             sep = "-") |>
+    select(Month, Year, 
+           `Los Angeles`, 
+           `San Diego`, 
+           `San Francisco`, 
+           `Sacramento`) |>
+    rename("LosAngeles" = `Los Angeles`,
+           "SanDiego" = `San Diego`, 
+           "SanFrancisco" = `San Francisco`) |>
+    filter(Year >= 15,
+           Year <= 18) |>
+    mutate(Year = as.factor(as.numeric(Year) + 2000),
+           Month = as.factor(Month),
+           across(`LosAngeles`:`Sacramento`, 
+                  function(x) as.numeric(gsub(gsub_expr, "", x))))
+}
 
+housing_sales <- clean_housing(dataset = sales, 
+                                gsub_expr = "%")
+
+housing_prices <- clean_housing(dataset = prices,
+                                gsub_expr = "[$,]")
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r r-3-2}
 
@@ -187,95 +300,233 @@ I've done this in the following provided assignments:
 
 **DVS-1: I can create visualizations for a *variety* of variable types (e.g., numeric, character, factor, date)**
 
--   numeric variables
+-   numeric variables\
+    Code from Challenge 4 - Analysis
 
 ```{r dvs-1-num}
-
+ggplot(data = avocado_size_mill, 
+       mapping = aes(x = HousesAvgPrice,
+                     y = SizeSales,
+                     color = Region)) +
+  geom_point(alpha = 0.4) +
+  facet_grid(~AvocadoSize) +
+  labs(title = "House Average Price vs Avocado Sales (per size) by region",
+       x = "Average Price for Single-Family Home (USD $)",
+       y = "Avocados Sold") +
+  theme(legend.position = "top")
 ```
 
--   numeric variables and categorical variables
+![](images/Screenshot%202023-02-15%20at%204.26.58%20PM.png){width="577"}
+
+-   numeric variables and categorical variables\
+    Code from Lab 4 - Question 5
 
 ```{r dvs-2-num-cat}
-
+ggplot(data = joined_top_metro,
+       mapping = aes(y = region,
+                     x = `Total Volume`)) +
+  geom_boxplot(mapping = aes(color = region)) +
+  geom_jitter(mapping = aes(color = region, alpha = 0.2)) +
+  labs(title = "Box Plots of top 5 avocado sellers by Metro Region",
+       y = "Metro Region Name",
+       x = "Average Number of Avocados Sold") +
+  theme(legend.position = "none")
 ```
 
--   categorical variables
+![](images/Screenshot%202023-02-15%20at%202.52.56%20PM.png){width="574"}
+
+-   categorical variables\
+    Code from Lab 3 - Question 10
 
 ```{r dvs-2-cat}
-
+ggplot(data = demographics,
+       mapping = aes(x = age,
+                     y = ethnic,
+                     color = ethnic,
+                     fill = ethnic)) +
+  geom_density_ridges(alpha = 0.5, 
+                      scale = 0.3, 
+                      jittered_points = TRUE, 
+                      point_alpha=0.5,
+                      point_shape=21) + 
+  geom_point() +
+  labs(title = "Distribution of Age amongst ethnic groups seperated by sex",
+       x = "Age",
+       y = "Ethnic Groups in Study") +
+  facet_wrap(~sex) +
+  theme(legend.position = "none")
 ```
 
--   dates
+![](images/Screenshot%202023-02-15%20at%204.35.12%20PM.png){width="570"}
+
+-   dates\
+    Code from Challenge 4 - Analysis
 
 ```{r dvs-2-date}
-
+ggplot(data = millennials, aes(x = Date, y = `Sales%Change`)) +
+  geom_point(mapping = aes(color = Region)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "% Change of Sales of Single-Family Home over time",
+       x = "Year",
+       y = "Percent Change in House Sales") +
+  facet_wrap( ~Region ) +
+  theme(legend.position = "none")
 ```
+
+![](images/Screenshot%202023-02-15%20at%204.33.01%20PM.png){width="576"}
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
 
--   Example 1
+-   Example 1\
+    Code from Challenge 4 - Analysis
 
 ```{r dvs-2-1}
-
+# move my legend to the top
+ggplot(data = avocado_size_mill, 
+       mapping = aes(x = HousesAvgPrice,
+                     y = SizeSales,
+                     color = Region)) +
+  geom_point(alpha = 0.4) +
+  facet_grid(~AvocadoSize) +
+  labs(title = "House Average Price vs Avocado Sales (per size) by region",
+       x = "Average Price for Single-Family Home (USD $)",
+       y = "Avocados Sold") +
+  theme(legend.position = "top")
 ```
 
--   Example 2
+-   Example 2\
+    Code from Lab 5 - Question 1
 
 ```{r dvs-2-2}
-
+# Used geom_text to remove the y axis and put annotations on the graph
+ggplot(data = surveys, 
+       mapping = aes(x = weight,
+                     y = fct_reorder(species, weight, .fun = median))
+       ) + 
+  geom_jitter(alpha = .3,
+              color = "darkseagreen") +
+  geom_boxplot() +
+  geom_text(aes(label = species), hjust = "right", x = 250, color = "black") +
+  labs(title = "Distribution of Weight within each Species",
+       x = "Weight (g)",
+       y = "Species of Animal") + 
+    theme(legend.position = "none", # removing legend
+          axis.line.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank()) 
 ```
 
 **DVS-3: I show creativity in my visualizations**
 
--   Example 1
+-   Example 1\
+    Code from Challenge 4 - Analysis
 
 ```{r dvs-3-1}
-
+ggplot(data = avocado_diff, 
+       mapping = aes(x = Date, 
+                     y = Change, 
+                     fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~Region) +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 45)) +
+  labs(title = "% Changes in Sales of Houses vs Sale Difference between 
+       Large and Small avocados in 2017",
+       y = "Magnitude of Sale Difference")
 ```
 
--   Example 2
+![](images/Screenshot%202023-02-15%20at%204.40.13%20PM.png){width="579"}
+
+-   Example 2\
+    Code from Lab 3 - Question 10
 
 ```{r dvs-3-2}
-
+ggplot(data = demographics,
+       mapping = aes(x = age,
+                     y = ethnic,
+                     color = ethnic,
+                     fill = ethnic)) +
+  geom_density_ridges(alpha = 0.5, 
+                      scale = 0.3, 
+                      jittered_points = TRUE, 
+                      point_alpha=0.5,
+                      point_shape=21) + 
+  geom_point() +
+  labs(title = "Distribution of Age amongst ethnic groups seperated by sex",
+       x = "Age",
+       y = "Ethnic Groups in Study") +
+  facet_wrap(~sex) +
+  theme(legend.position = "none")
 ```
+
+![](images/Screenshot%202023-02-15%20at%204.43.12%20PM.png){width="569"}
 
 **DVS-4: I can calculate numerical summaries of variables.**
 
--   Example 1
+-   Example 1\
+    Code from Lab 4 - Question 7
 
 ```{r dvs-4-1}
-
+q7_df <- california |>
+  select(region, Small, Large, XLarge, type) |> # Selecting only necessary
+  group_by(region, type) |>
+  summarize(Small = mean(Small),
+            Large = mean(Large),
+            `Extra Large` = mean(XLarge)) |>
+  pivot_longer(cols = Small:`Extra Large`,
+               names_to = "size",
+               values_to = "mean_sold")
 ```
 
--   Example 2
+-   Example 2\
+    Code from Lab 3 - Question 6
 
 ```{r dvs-4-2}
-
+hiphop_clean |>
+  distinct(word) |>
+  summarize(count = n()) |>
+  pull(count) |>
+  sum()
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
 
--   Example 1
+-   Example 1\
+    Code from Challenge 3 - Plotting Data
 
 ```{r dvs-5-1}
-
+hiphop_clean |>
+  group_by(sex) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   Example 2
+-   Example 2\
+    Code from Lab 4 - Question 7
 
 ```{r dvs-5-2}
-
+q7_df <- california |>
+  select(region, Small, Large, XLarge, type) |> # Selecting only necessary
+  group_by(region, type) |>
+  summarize(Small = mean(Small),
+            Large = mean(Large),
+            `Extra Large` = mean(XLarge)) |>
+  pivot_longer(cols = Small:`Extra Large`,
+               names_to = "size",
+               values_to = "mean_sold")
 ```
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r dvs-6-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r dvs-6-2}
 
@@ -283,13 +534,15 @@ I've done this in the following provided assignments:
 
 **DVS-7: I show creativity in my tables.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r dvs-7-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r dvs-7-2}
 
@@ -299,19 +552,68 @@ I've done this in the following provided assignments:
 
 **PE-1: I can write concise code which does not repeat itself.**
 
--   using a single function call
+-   using a single function call \[included two examples of this :)\]
 
-```{r pe-1-one-call}
+    -   Example 1\
+        Code from Challenge 4 - Data Cleaning
 
+    ```{r pe-1-one-call1}
+    # Created a function that cleans datasets
+    clean_housing <- function(dataset, gsub_expr) {
+      dataset |>
+        separate(col = `Mon-Yr`,
+                 into = c("Month", "Year"),
+                 sep = "-") |>
+        select(Month, Year, 
+               `Los Angeles`, 
+               `San Diego`, 
+               `San Francisco`, 
+               `Sacramento`) |>
+        rename("LosAngeles" = `Los Angeles`,
+               "SanDiego" = `San Diego`, 
+               "SanFrancisco" = `San Francisco`) |>
+        filter(Year >= 15,
+               Year <= 18) |>
+        mutate(Year = as.factor(as.numeric(Year) + 2000),
+               Month = as.factor(Month),
+               across(`LosAngeles`:`Sacramento`, 
+                      function(x) as.numeric(gsub(gsub_expr, "", x))))
+    }
+
+    ```
+
+    -   Example 2\
+        Code from Challenge 2 - Question 3
+
+```{r pe-1-one-call2}
+ggplot(data = surveys, 
+       mapping = aes(y = species,
+                     x = weight,
+                     alpha = .2,
+                     color = genus,
+                     fill = genus),
+       ) + 
+  geom_density_ridges() +
+  geom_text(aes(label = genus), nudge_y = 0.5, hjust = "right", x = 250, color = "white") +
+  labs(title = "Distribution of Weight within each Species",
+       x = "Weight (g)",
+       y = "Species") +
+  theme_dark() +
+  theme(legend.position = "none" )
 ```
 
--   `across()`
+-   
+
+    -   
+
+-   `across()`Code from
 
 ```{r pe-1-across}
 
 ```
 
--   `map()` functions
+-   `map()` functions\
+    Code from
 
 ```{r pe-1-map-1}
 
@@ -319,13 +621,15 @@ I've done this in the following provided assignments:
 
 **PE-2: I can write functions to reduce repetition in my code.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r pe2-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r pe2-2}
 
@@ -333,13 +637,14 @@ I've done this in the following provided assignments:
 
 **PE-3:I can use iteration to reduce repetition in my code.**
 
--   `across()`
+-   `across()`Code from
 
 ```{r pe-3-across}
 
 ```
 
--   `map()` functions (Provide 2 Examples)
+-   `map()` functions (Provide 2 Examples)\
+    Code from
 
 ```{r pe-3-map-1}
 
@@ -351,13 +656,15 @@ I've done this in the following provided assignments:
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r pe-4-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r pe-4-2}
 
@@ -367,13 +674,15 @@ I've done this in the following provided assignments:
 
 **DSM-1: I can simulate data from a *variety* of probability models.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r dsm-1-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r dsm-1-2}
 
@@ -381,13 +690,15 @@ I've done this in the following provided assignments:
 
 **DSM-2: I can fit a linear regression and extract necessary summary measures.**
 
--   Example 1
+-   Example 1\
+    Code from
 
 ```{r dsm-2-1}
 
 ```
 
--   Example 2
+-   Example 2\
+    Code from
 
 ```{r dsm-2-2}
 
