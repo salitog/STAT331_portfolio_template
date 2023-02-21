@@ -19,29 +19,30 @@ execute:
 
 **WD-1: I can import data from a *variety* of formats (e.g., csv, xlsx, txt, etc.).**
 
--   `csv`\
-    Code comes from Challenge 4 - Data Importing
+-   `csv` Challenge 4 - Data Importing
 
 ```{r wd-1-csv}
 avocado <- read_csv(here("Labs", "Lab 4", "avocado.csv"))
 prices <- read_csv("https://raw.githubusercontent.com/salitog/STATS331/main/HistoricalPrices.csv")
 ```
 
--   `xlsx`Code from
+-   `xlsx` Practice Activity 4 - Data Importing
 
 ```{r wd-1-xlsx}
-
+military <- read_xlsx(here::here("data", 
+                                 "gov_spending_per_capita.xlsx"), 
+                      sheet = "Share of Govt. spending"  , 
+                      skip = 6, 
+                      n_max = 186 )
 ```
 
--   `txt`Code from
+-   `txt` Preview Activity 5.2 - Data Importing
 
 ```{r wd-1-txt}
-
+message <- read_csv(here("data", "scrambled_message.txt"))
 ```
 
-**WD-2: I can select necessary columns from a dataset.**
-
-Code from Challenge 4 - Analysis
+**WD-2: I can select necessary columns from a dataset:** Challenge 4 - Analysis
 
 ```{r wd-2}
 avocado_size_mill <- millennials |>
@@ -53,8 +54,7 @@ avocado_size_mill <- millennials |>
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   numeric\
-    Code comes from Lab 3 - Question 14
+-   numeric: Lab 3 - Question 14
 
 ```{r wd-3-numeric}
 hiphop_clean |>
@@ -69,8 +69,7 @@ hiphop_clean |>
   distinct(subj, .keep_all = TRUE)
 ```
 
--   character -- specifically a string\
-    Code from Lab 4 - Question 2
+-   character -- specifically a string: Lab 4 - Question 2
 
 ```{r wd-3-string}
 # Dataframe for state related sales
@@ -79,8 +78,7 @@ state_sales <- avocado_clean |>
 
 ```
 
--   factor\
-    Code from Lab 3 - Question 12
+-   factor: Lab 3 - Question 12
 
 ```{r wd-3-factor}
 hiphop_clean |>
@@ -92,8 +90,7 @@ hiphop_clean |>
   arrange(desc(mean_fam))
 ```
 
--   date\
-    Code from Lab 5 - Question 2
+-   date: Lab 5 - Question 2
 
 ```{r wd-3-date}
 rodents <- surveys_summary |>
@@ -106,8 +103,7 @@ rodents <- surveys_summary |>
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   numeric\
-    Code from Challenge 4 - Analysis
+-   numeric: Challenge 4 - Analysis
 
 ```{r wd-4-numeric}
 avocado_diff <- millennials |>
@@ -118,16 +114,14 @@ avocado_diff <- millennials |>
          HousingSaleDiff = scale(`Sales%Change`))
 ```
 
--   character -- specifically a string\
-    Code from Lab 3 - Question 7
+-   character -- specifically a string: Lab 3 - Question 7
 
 ```{r wd-4-string}
 hiphop_clean <- hiphop_clean |>
   mutate(ethnic_ctgr = if_else(ethnic == "white", "white", "non-white"))
 ```
 
--   factor\
-    Code from Lab 4 - Question 2
+-   factor: Lab 4 - Question 2
 
 ```{r wd-4-factor}
 avocado_clean <- avocado |>
@@ -135,8 +129,7 @@ avocado_clean <- avocado |>
          region = as.factor(region))
 ```
 
--   date\
-    Code from Lab 5 - Question 1
+-   date: Lab 5 - Question 1
 
 ```{r wd-4-date}
 surveys_summary <- surveys |>
@@ -145,8 +138,7 @@ surveys_summary <- surveys |>
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
 
--   `left_join()` \
-    Code from Lab 4 - Question 5
+-   `left_join()`: Lab 4 - Question 5
 
 ```{r wd-5-left}
 joined_top_metro <- top5_metro_sellers |>
@@ -154,40 +146,35 @@ joined_top_metro <- top5_metro_sellers |>
   select(region, `Total Volume`)
 ```
 
--   `right_join()` \
-    Code from Challenge 4 - Joining Data
+-   `right_join()`:
 
 ```{r wd-5-right}
-housing <- housing_sales |>
-  right_join(housing_prices, 
-            by = c("Month", "Year", "Region"))
+
 ```
 
--   `inner_join()` \
-    Code from
+-   `inner_join()`: Preview Activity 11 - Question 1
 
 ```{r wd-5-inner}
-
+prof_info |>
+  inner_join(prof_course)
 ```
 
--   `full_join()` \
-    Code from
+-   `full_join()`: Preview Activity 11 - Question 2
 
 ```{r wd-5-full}
-
+prof_info |>
+  full_join(prof_course)
 ```
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
 
--   `semi_join()` \
-    Code from
+-   `semi_join()`:
 
 ```{r wd-6-semi}
 
 ```
 
--   `anti_join()` \
-    Code from Lab 4 - Question 2
+-   `anti_join()`: Lab 4 - Question 2
 
 ```{r wd-6-anti}
 # Dataframe for only metropolitan areas (cities)
@@ -199,8 +186,7 @@ metro_region_sales <- avocado_clean |>
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
 
--   `pivot_longer()` \
-    Code from Challenge 4 - Analysis
+-   `pivot_longer()`: Challenge 4 - Analysis
 
 ```{r wd-7-long}
 avocado_size_mill <- millennials |>
@@ -210,8 +196,7 @@ avocado_size_mill <- millennials |>
  select(Date, Region, AveragePrice, `Total Volume`, Type:SizeSales)
 ```
 
--   `pivot_wider()` \
-    Code from Lab 4 - Question 6
+-   `pivot_wider()`: Lab 4 - Question 6
 
 ```{r wd-7-wide}
 df_q6 <- california |>
@@ -231,8 +216,7 @@ I've done this in the following provided assignments:
 
 **R-2: I can write well documented and tidy code.**
 
--   Example 1\
-    Code from Lab 4 - Question 6
+-   Example 1: Lab 4 - Question 6
 
 ```{r r-2-1}
 df_q6 <- california |>
@@ -244,8 +228,7 @@ df_q6 <- california |>
   summarize(`mean diff` = mean(diff)) # calculate mean of difference
 ```
 
--   Example 2\
-    Code from Lab 3 - Question 3
+-   Example 2: Lab 3 - Question 3
 
 ```{r r-2-2}
 hiphop |>
@@ -257,8 +240,7 @@ hiphop |>
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
 
--   Example 1\
-    Code from Challenge 4 - Data Importing
+-   Example 1: Challenge 4 - Data Importing
 
 ```{r r-3-1}
 clean_housing <- function(dataset, gsub_expr) {
@@ -289,8 +271,7 @@ housing_prices <- clean_housing(dataset = prices,
                                 gsub_expr = "[$,]")
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r r-3-2}
 
@@ -300,8 +281,7 @@ housing_prices <- clean_housing(dataset = prices,
 
 **DVS-1: I can create visualizations for a *variety* of variable types (e.g., numeric, character, factor, date)**
 
--   numeric variables\
-    Code from Challenge 4 - Analysis
+-   numeric variables: Challenge 4 - Analysis
 
 ```{r dvs-1-num}
 ggplot(data = avocado_size_mill, 
@@ -316,10 +296,7 @@ ggplot(data = avocado_size_mill,
   theme(legend.position = "top")
 ```
 
-![](images/Screenshot%202023-02-15%20at%204.26.58%20PM.png){width="577"}
-
--   numeric variables and categorical variables\
-    Code from Lab 4 - Question 5
+-   numeric variables and categorical variables: Lab 4 - Question 5
 
 ```{r dvs-2-num-cat}
 ggplot(data = joined_top_metro,
@@ -333,10 +310,7 @@ ggplot(data = joined_top_metro,
   theme(legend.position = "none")
 ```
 
-![](images/Screenshot%202023-02-15%20at%202.52.56%20PM.png){width="574"}
-
--   categorical variables\
-    Code from Lab 3 - Question 10
+-   categorical variables: Lab 3 - Question 10
 
 ```{r dvs-2-cat}
 ggplot(data = demographics,
@@ -357,10 +331,7 @@ ggplot(data = demographics,
   theme(legend.position = "none")
 ```
 
-![](images/Screenshot%202023-02-15%20at%204.35.12%20PM.png){width="570"}
-
--   dates\
-    Code from Challenge 4 - Analysis
+-   dates: Challenge 4 - Analysis
 
 ```{r dvs-2-date}
 ggplot(data = millennials, aes(x = Date, y = `Sales%Change`)) +
@@ -373,12 +344,9 @@ ggplot(data = millennials, aes(x = Date, y = `Sales%Change`)) +
   theme(legend.position = "none")
 ```
 
-![](images/Screenshot%202023-02-15%20at%204.33.01%20PM.png){width="576"}
-
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
 
--   Example 1\
-    Code from Challenge 4 - Analysis
+-   Example 1: Challenge 4 - Analysis
 
 ```{r dvs-2-1}
 # move my legend to the top
@@ -394,8 +362,7 @@ ggplot(data = avocado_size_mill,
   theme(legend.position = "top")
 ```
 
--   Example 2\
-    Code from Lab 5 - Question 1
+-   Example 2: Lab 5 - Question 1
 
 ```{r dvs-2-2}
 # Used geom_text to remove the y axis and put annotations on the graph
@@ -418,8 +385,7 @@ ggplot(data = surveys,
 
 **DVS-3: I show creativity in my visualizations**
 
--   Example 1\
-    Code from Challenge 4 - Analysis
+-   Example 1: Challenge 4 - Analysis
 
 ```{r dvs-3-1}
 ggplot(data = avocado_diff, 
@@ -435,10 +401,7 @@ ggplot(data = avocado_diff,
        y = "Magnitude of Sale Difference")
 ```
 
-![](images/Screenshot%202023-02-15%20at%204.40.13%20PM.png){width="579"}
-
--   Example 2\
-    Code from Lab 3 - Question 10
+-   Example 2: Lab 3 - Question 10
 
 ```{r dvs-3-2}
 ggplot(data = demographics,
@@ -459,12 +422,9 @@ ggplot(data = demographics,
   theme(legend.position = "none")
 ```
 
-![](images/Screenshot%202023-02-15%20at%204.43.12%20PM.png){width="569"}
-
 **DVS-4: I can calculate numerical summaries of variables.**
 
--   Example 1\
-    Code from Lab 4 - Question 7
+-   Example 1: Lab 4 - Question 7
 
 ```{r dvs-4-1}
 q7_df <- california |>
@@ -478,8 +438,7 @@ q7_df <- california |>
                values_to = "mean_sold")
 ```
 
--   Example 2\
-    Code from Lab 3 - Question 6
+-   Example 2: Lab 3 - Question 6
 
 ```{r dvs-4-2}
 hiphop_clean |>
@@ -491,8 +450,7 @@ hiphop_clean |>
 
 **DVS-5: I can find summaries of variables across multiple groups.**
 
--   Example 1\
-    Code from Challenge 3 - Plotting Data
+-   Example 1: Challenge 3 - Plotting Data
 
 ```{r dvs-5-1}
 hiphop_clean |>
@@ -501,8 +459,7 @@ hiphop_clean |>
   summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   Example 2\
-    Code from Lab 4 - Question 7
+-   Example 2: Lab 4 - Question 7
 
 ```{r dvs-5-2}
 q7_df <- california |>
@@ -554,8 +511,7 @@ q7_df <- california |>
 
 -   using a single function call \[included two examples of this :)\]
 
-    -   Example 1\
-        Code from Challenge 4 - Data Cleaning
+    -   Example 1: Challenge 4 - Data Cleaning
 
     ```{r pe-1-one-call1}
     # Created a function that cleans datasets
@@ -582,8 +538,7 @@ q7_df <- california |>
 
     ```
 
-    -   Example 2\
-        Code from Challenge 2 - Question 3
+    -   Example 2: Challenge 2 - Question 3
 
 ```{r pe-1-one-call2}
 ggplot(data = surveys, 
@@ -606,14 +561,13 @@ ggplot(data = surveys,
 
     -   
 
--   `across()`Code from
+-   `across()`:
 
 ```{r pe-1-across}
 
 ```
 
--   `map()` functions\
-    Code from
+-   `map()` functions:
 
 ```{r pe-1-map-1}
 
@@ -621,15 +575,13 @@ ggplot(data = surveys,
 
 **PE-2: I can write functions to reduce repetition in my code.**
 
--   Example 1\
-    Code from
+-   Example 1:
 
 ```{r pe2-1}
 
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r pe2-2}
 
@@ -637,14 +589,13 @@ ggplot(data = surveys,
 
 **PE-3:I can use iteration to reduce repetition in my code.**
 
--   `across()`Code from
+-   `across()`:
 
 ```{r pe-3-across}
 
 ```
 
--   `map()` functions (Provide 2 Examples)\
-    Code from
+-   `map()` functions (Provide 2 Examples):
 
 ```{r pe-3-map-1}
 
@@ -656,15 +607,13 @@ ggplot(data = surveys,
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   Example 1\
-    Code from
+-   Example 1:
 
 ```{r pe-4-1}
 
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r pe-4-2}
 
@@ -674,15 +623,13 @@ ggplot(data = surveys,
 
 **DSM-1: I can simulate data from a *variety* of probability models.**
 
--   Example 1\
-    Code from
+-   Example 1:
 
 ```{r dsm-1-1}
 
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r dsm-1-2}
 
@@ -690,15 +637,13 @@ ggplot(data = surveys,
 
 **DSM-2: I can fit a linear regression and extract necessary summary measures.**
 
--   Example 1\
-    Code from
+-   Example 1:
 
 ```{r dsm-2-1}
 
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r dsm-2-2}
 
