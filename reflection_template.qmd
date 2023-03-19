@@ -214,6 +214,10 @@ df_q6 <- california |>
 
 I've done this in the following provided assignments:
 
+-   Example 1: Challenge 4
+
+-   Example 2: Lab 5
+
 **R-2: I can write well documented and tidy code.**
 
 -   Example 1: Lab 4 - Question 6
@@ -271,10 +275,36 @@ housing_prices <- clean_housing(dataset = prices,
                                 gsub_expr = "[$,]")
 ```
 
--   Example 2:
+-   Example 2: Lab 8 - Question 1
 
 ```{r r-3-2}
-
+make_phrase <- function(day, item, verb, adjective, location) {
+  
+  plural_item <- pluralize_gift(item)
+  num_word <- nums_to_string(day)
+  
+  ## Step 1: Replace NAs with blank strings
+  verb <- verb |>
+    str_replace_na("") |>
+    str_replace("-", " ")
+  adjective <- str_replace_na(adjective, "")
+  location <- str_replace_na(location, "")
+  
+  ## Step 2: If the day is larger than 1, the items need pluralized! 
+  item_name <- ifelse(day == 1, item, plural_item)
+  
+  ## Step 3: If the day is 1, you need to add an "a" or "an" before the gift 
+  start <- ifelse(day == 1, "A", num_word)
+  
+  and <- ifelse(day == 2, "and", "")
+  
+  ## Step 4: Glue all of the pieces together to make a phrase! 
+  sentence <- glue("{start} {adjective} {item_name} {verb} {location}{and}") |>
+    str_replace_all("  ", " ")
+  
+  
+  return(sentence)
+}
 ```
 
 ## Data Visualization & Summarization
@@ -298,7 +328,7 @@ ggplot(data = avocado_size_mill,
 
 -   numeric variables and categorical variables: Lab 4 - Question 5
 
-```{r dvs-2-num-cat}
+```{r dvs-1-chr}
 ggplot(data = joined_top_metro,
        mapping = aes(y = region,
                      x = `Total Volume`)) +
@@ -312,7 +342,7 @@ ggplot(data = joined_top_metro,
 
 -   categorical variables: Lab 3 - Question 10
 
-```{r dvs-2-cat}
+```{r dvs-1-fctr}
 ggplot(data = demographics,
        mapping = aes(x = age,
                      y = ethnic,
@@ -333,7 +363,7 @@ ggplot(data = demographics,
 
 -   dates: Challenge 4 - Analysis
 
-```{r dvs-2-date}
+```{r dvs-1-date}
 ggplot(data = millennials, aes(x = Date, y = `Sales%Change`)) +
   geom_point(mapping = aes(color = Region)) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -401,51 +431,40 @@ ggplot(data = avocado_diff,
        y = "Magnitude of Sale Difference")
 ```
 
--   Example 2: Lab 3 - Question 10
+-   Example 2: Lab 9 - Question 5
 
 ```{r dvs-3-2}
-ggplot(data = demographics,
-       mapping = aes(x = age,
-                     y = ethnic,
-                     color = ethnic,
-                     fill = ethnic)) +
-  geom_density_ridges(alpha = 0.5, 
-                      scale = 0.3, 
-                      jittered_points = TRUE, 
-                      point_alpha=0.5,
-                      point_shape=21) + 
-  geom_point() +
-  labs(title = "Distribution of Age amongst ethnic groups seperated by sex",
-       x = "Age",
-       y = "Ethnic Groups in Study") +
-  facet_wrap(~sex) +
-  theme(legend.position = "none")
+allans <- stateNames |>
+  filter(Name == c("Allan", "Alan", "Allen"),
+         Sex == "M") |>
+  group_by(Year, Name) |>
+  summarize(num_names = sum(Count))
+
+ggplot(data = allans,
+       mapping = aes(x = Year,
+                     y = num_names,
+                     color = Name)) +
+  geom_line() +
+  labs(title = "Number of babies with the names Alan, Allan, or Allen, per year",
+       y = "",
+       x = "Year")
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
 
--   Example 1: Lab 4 - Question 7
+-   Example 1: Challenge 3 - Plotting Data
 
 ```{r dvs-4-1}
-q7_df <- california |>
-  select(region, Small, Large, XLarge, type) |> # Selecting only necessary
-  group_by(region, type) |>
-  summarize(Small = mean(Small),
-            Large = mean(Large),
-            `Extra Large` = mean(XLarge)) |>
-  pivot_longer(cols = Small:`Extra Large`,
-               names_to = "size",
-               values_to = "mean_sold")
+hiphop_clean |>
+  group_by(sex) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   Example 2: Lab 3 - Question 6
+-   Example 2:
 
 ```{r dvs-4-2}
-hiphop_clean |>
-  distinct(word) |>
-  summarize(count = n()) |>
-  pull(count) |>
-  sum()
+
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -475,15 +494,13 @@ q7_df <- california |>
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
 
--   Example 1\
-    Code from
+-   Example 1:
 
 ```{r dvs-6-1}
 
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r dvs-6-2}
 
@@ -491,15 +508,21 @@ q7_df <- california |>
 
 **DVS-7: I show creativity in my tables.**
 
--   Example 1\
-    Code from
+-   Example 1: Challenge 9 - Filtering Multiple Values
 
 ```{r dvs-7-1}
-
+allans2 |>
+  left_join(totals) |>
+  mutate(Allan = (Allan / Total) * 100,
+         Allen = (Allen / Total) * 100,
+         Alan = (Alan / Total) * 100) |>
+  select(-Total) |>
+  kable(align = c("c", "c", "c", "c")) |>
+  kable_styling(font_size = 14) |>
+  add_header_above(header = c("", "%", "%", "%"))
 ```
 
--   Example 2\
-    Code from
+-   Example 2:
 
 ```{r dvs-7-2}
 
@@ -535,10 +558,13 @@ q7_df <- california |>
                across(`LosAngeles`:`Sacramento`, 
                       function(x) as.numeric(gsub(gsub_expr, "", x))))
     }
-
+    housing_sales <- clean_housing(dataset = sales, 
+                                    gsub_expr = "%")
+    housing_prices <- clean_housing(dataset = prices,
+                                    gsub_expr = "[$,]")
     ```
 
-    -   Example 2: Challenge 2 - Question 3
+    -   Example 2: Challenge 2 - Question 3 - Here, I used geom_text instead of having annotations
 
 ```{r pe-1-one-call2}
 ggplot(data = surveys, 
@@ -557,48 +583,86 @@ ggplot(data = surveys,
   theme(legend.position = "none" )
 ```
 
--   
-
-    -   
-
--   `across()`:
+-   `across()`: Challenge 3 - Plotting Data
 
 ```{r pe-1-across}
-
+hiphop_clean |>
+  group_by(sex) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   `map()` functions:
+-   `map()` functions: Lab 8 - Question 4
 
 ```{r pe-1-map-1}
-
+s <- map(1:12, function(x) sing_line(xmas, line = x, phrase_col = Full.Phrase))
+print(s)
 ```
 
 **PE-2: I can write functions to reduce repetition in my code.**
 
--   Example 1:
+-   Example 1: Challenge 4 - Housing Datasets
 
 ```{r pe2-1}
-
+clean_housing <- function(dataset, gsub_expr) {
+  dataset |>
+    separate(col = `Mon-Yr`,
+             into = c("Month", "Year"),
+             sep = "-") |>
+    select(Month, Year, 
+           `Los Angeles`, 
+           `San Diego`, 
+           `San Francisco`, 
+           `Sacramento`) |>
+    rename("LosAngeles" = `Los Angeles`,
+           "SanDiego" = `San Diego`, 
+           "SanFrancisco" = `San Francisco`) |>
+    filter(Year >= 15,
+           Year <= 18) |>
+    mutate(Year = as.factor(as.numeric(Year) + 2000),
+           Month = as.factor(Month),
+           across(`LosAngeles`:`Sacramento`, 
+                  function(x) as.numeric(gsub(gsub_expr, "", x))))
+}
 ```
 
--   Example 2:
+-   Example 2: Lab 7 - Question 3.1
 
 ```{r pe2-2}
+rescale_01 <- function(x) {
+  if (! is.numeric(x)) {
+    stop(paste("Vector is not numerical but of class type: ", class(x)))
+  }
+  if (length(x) < 1) {
+    stop(paste("Vector's length must be at least 1. Got length ", length(x)))
+  }
+  # stopifnot(is.numeric(x), length(x) > 1)
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
 
+#calling the rescale_01 function
+rescaled <- fish |> 
+  mutate(length = rescale_01(length),
+         weight = rescale_01(weight))
+kable(head(rescaled, 8))
 ```
 
 **PE-3:I can use iteration to reduce repetition in my code.**
 
--   `across()`:
+-   `across()`: Challenge 3- Plotting Data
 
 ```{r pe-3-across}
-
+hiphop_clean |>
+  group_by(sex) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   `map()` functions (Provide 2 Examples):
+-   `map()` functions (Provide 2 Examples): Lab 8 - Question 4
 
 ```{r pe-3-map-1}
-
+s <- map(1:12, function(x) sing_line(xmas, line = x, phrase_col = Full.Phrase))
+print(s)
 ```
 
 ```{r pe-3-map-2}
@@ -653,10 +717,24 @@ ggplot(data = surveys,
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
 
+So far, I\'ve received growing grades on some of my questions for labs and challenges. In almost every single assignment, I've made revisions to get an S on almost all G's I had. However, I have not stopped at just changing the code those questions with G's, but try to satisfy all suggestions or comments that the professor, or a classmate have left on my assignments even if I had an S grade. Every time I changed anything on my submitted code, I included a thoughtful reflection, explaining what I did, why I did it, and what I learned.
+
+Further, I have been able to use what I\'ve learned from my reflections in other assignments. For example, for lab three I used the function mutate_at, which was already preceded by the across function. I then learned how to use the across function and used it in the rest of my coming labs and challenges.
+
 ## Extending My Thinking
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
 
+I have demonstrated that I extend my thinking by sometimes going above and beyond the specifications of the lab or assignment. For example, for challenge 2, I came up with a way to remove the repetition of annotations and boil everything down to a single line using the geom_text function. Another example is on lab 3 where I used density ridges to explore my data. However, I figured out how to jitter my data points within the ridges so that the plot was more interesting looking.
+
+So far, the assignment I've enjoyed the most is Challenge 4, the analysis of avocados and milenials. The liberty to use the data you want, and then decide what plots and transformations you need to do is awesome. I think I did a good job to make this assignment very analytic and thoughtful.
+
 ## Peer Support & Collaboration
 
 <!-- Include an image of feedback you gave that you are proud of (either in a peer review or in Discord) -->
+
+Peer review is very important to me as that is the main way I can make improvements to my code. I try to complete my peer reviews as soon as I possibly can. I try to refer to the style guide as much as possible. Sometimes, I find that other people do the same mistakes I have done before so I try to help with constructive feedback and a solution to their issues. I am always trying to look thoroughly through my peers\' code and try to identify the areas where they can improve.
+
+As for when I am working with my Lab group, I\'ve tried to give them the opportunity to take the writer role so that the members who are not normally coding a lot, can practice their coding. I try to make sure to give my group mates time to think over the problems instead of taking over the conversation and solution ideation. Even though I am a computer science major and code every day, I take a step back and let my group mates come up with different ideas to improve our code without me taking control of the keyboard or discussion. There has been many times where they\'ve come up with code that I would\'ve never thought of. Having this diverse set of skills in my group is specially important because everybody brings different perspectives and ideas to the table.
+
+I am sadly missing in this area where I could be helping people on discord. However, because of my work load, I catch myself working on labs and assignments close to the due date, and by the time people have already answered most questions. But, I will try to work on this and be more participating on the Discord Server.
