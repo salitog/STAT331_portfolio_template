@@ -1,0 +1,152 @@
+---
+title: "Lab 8: The 12 Days of Christmas"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+  warning: false
+---
+
+# **Lab 8: The 12 Days of Christmas**
+
+## **Singing the Song**
+
+Alright, so you've already created two helper functions, `pluralize_gift()` and `make_phrase()`, which you used at the end of the Practice Activity to create a column of song phrases / lines.
+
+Today, you will use these phrases to write a function which sings the lines of song for a given day. We will then use this function to iterate through the 12 days of Christmas to get our song!
+
+```{r setup}
+library(dplyr)
+library(glue)
+library(stringr)
+library(purrr)
+library(knitr)
+```
+
+```{r data-import}
+xmas <- read.csv("https://www.dropbox.com/s/e584pryn8evm1gz/xmas.csv?dl=1")
+```
+
+```{r pa8-code}
+pluralize_gift <- function(gift){
+  gift <- gift |>
+    str_c(string = "s", sep = "") |>
+    str_replace(pattern = "ys$", replacement = "ies") |>
+    str_replace(pattern = "gooses$", replacement = "geese")
+  
+  return(gift)
+
+}
+
+num_names <- c("Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve")
+
+nums_to_string <- function(nums) {
+  return(num_names[nums + 1])
+}
+
+make_phrase <- function(day, item, verb, adjective, location) {
+  
+  plural_item <- pluralize_gift(item)
+  num_word <- nums_to_string(day)
+  
+  ## Step 1: Replace NAs with blank strings
+  verb <- verb |>
+    str_replace_na("") |>
+    str_replace("-", " ")
+  adjective <- str_replace_na(adjective, "")
+  location <- str_replace_na(location, "")
+  
+  ## Step 2: If the day is larger than 1, the items need pluralized! 
+  item_name <- ifelse(day == 1, item, plural_item)
+  
+  ## Step 3: If the day is 1, you need to add an "a" or "an" before the gift 
+  start <- ifelse(day == 1, "A", num_word)
+  
+  and <- ifelse(day == 2, "and", "")
+  
+  ## Step 4: Glue all of the pieces together to make a phrase! 
+  sentence <- glue("{start} {adjective} {item_name} {verb} {location}{and}") |>
+    str_replace_all("  ", " ")
+  
+  
+  return(sentence)
+}
+```
+
+```{r}
+xmas <- xmas |>
+  mutate(Full.Phrase = pmap_chr(.l = list(xmas$Day,
+                                          xmas$Gift.Item,
+                                          xmas$Verb,
+                                          xmas$Adjective,
+                                          xmas$Location), 
+                                .f = make_phrase)
+         )
+
+kable(head(xmas, 5))
+```
+
+After running all the code above, we have created a new variable in or data set with the full phrases for each gift. This will be used to create the whole song.
+
+## **Step Three: Iteration.**
+
+Write a function called `sing_day()` that takes as input:
+
+-   A dataset (input as a dataframe)
+
+-   A number indicating which day to sing about (input as an integer)
+
+-   The name of a column in the dataset that contains the phrases for each day (input as an **tidy** name)
+
+```{r sing-line-function}
+# Produces the string for one day of the song.
+# Arguments -- dataset: A data frame containing information about gifts
+# Arguments -- line: The number of the line for the day you want to sing about
+# Arguments -- phrase_col: The variable name for the column in the dataset that contains the song phrases
+# Return -- A string singing the line of the song with all gifts for the given day.
+
+sing_line <- function(dataset, line, phrase_col){
+  
+  # Step 1: Setup the intro line
+  # Hint: You need to convert a number (e.g., 1) to a word (e.g., first)
+  num_word <- dataset$Day.in.Words[line]
+  
+  intro <- glue::glue("On the {num_word} day of Christmas, my true love sent to me:")
+  
+  # Step 2: Sing the gift phrases
+  phrases <- dataset |>
+    pull({{phrase_col}}) |>
+    head(line) |>
+    c(glue("{intro}")) |>
+    rev()
+    
+  ## put it together
+  
+  song <- paste(phrases, collapse = "\n")
+    
+  return(song)
+}
+```
+
+## **A Small Test**
+
+```{r small-test}
+xmas |>
+  sing_line(line = 2, phrase_col = Full.Phrase) |>
+  cat()
+```
+
+## **Step Four: Use Your Functions!**
+
+Now that you've written your `sing_line()` function, it is time to use it to sing the entire 12 Days of Christmas song. To do this, you will need to iterate over each day of the 12 days, to obtain the lyrics for that day.
+
+```{r everything!}
+s <- map(1:12, function(x) sing_line(xmas, line = x, phrase_col = Full.Phrase))
+print(s)
+```

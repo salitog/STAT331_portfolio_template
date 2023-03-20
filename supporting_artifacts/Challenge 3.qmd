@@ -1,0 +1,134 @@
+---
+title: "Challenge 3"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+---
+
+# Challenge 3: Group Comparisons & Data Ethics
+
+## Published Comparisons
+
+In the published article ([You Know What It Is: Learning Words through Listening to Hip-Hop](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0028248&type=printable)), the author presents a series of comparisons about the variables which most explain an individual's familiarity with African American English (AAE).
+
+Let us instead compare the number of artists participants reported liking for each genre. Specifically, you will determine which music genre most differentiates each of the demographic groups provided.
+
+> Which genre had much higher average (mean or median) reported artists in one group than the other.
+>
+> -   Male versus Female
+> -   White versus Non-White
+
+::: callout-tip
+You might find it helpful to first create a new data set with only the variables you are interested in! Look at the Music Variables in the data set description along with the demographics of interest.
+
+Helpful functions: `select()`, `group_by()`, `summarize()`, `across()`
+
+Other useful operations in R: `mean()`, `diff()`, `abs()`, `which.max()`
+:::
+
+# Setup
+
+```{r set-up}
+
+library(tidyverse)
+library(here)
+
+```
+
+# Data Reading
+
+```{r data-reading}
+
+hiphop <- read_csv(here("Labs", "Lab 3", "hiphop.csv"), show_col_types = FALSE)
+```
+
+# Data Cleaning
+
+```{r data-cleaning}
+
+hiphop_clean <- hiphop |>
+  select(word, subj, sex, age, ethnic, intl:unclassifiable) |>
+  mutate_at(c("word", "sex", "ethnic"), as.factor) |>
+  mutate(ethnic_ctgr = if_else(ethnic == "white", "white", "non-white"))
+```
+
+# Plotting Data
+
+```{r artists-by-genre}
+
+#ggplot(data = hiphop_clean,
+#       mapping = aes(x = ))
+# create data frame with multiple numerical variables
+```
+
+> Which genre had much higher average (mean or median) reported artists in one group than the other.
+
+```{r male-vs-female}
+
+hiphop_clean |>
+  group_by(sex) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
+```
+
+::: {.callout-important appearance="minimal"}
+The max mean in the summary represents the max mean of the genre that each sex group reported artists for. For females, alternative had the most reported artists, while males reported more for rock.
+:::
+
+```{r white-nonwhite}
+
+hiphop_clean |>
+  group_by(ethnic_ctgr) |>
+  mutate(across(intl:unclassifiable, mean)) |>
+  summarize(max_mean = max(across(intl:unclassifiable, mean)))
+```
+
+hiphop_clean \|\> group_by(ethnic_ctgr) \|\> mutate(across(intl:unclassifiable, mean))
+
+::: {.callout-important appearance="minimal"}
+Non-white individuals reported more artists in the hip-hop genre, while white subjects reported more artists for rock.
+:::
+
+## Study Design Critique -- Data Ethics
+
+Myself, members of the Tidy Tuesday community, and previous 331 students have voiced concerns regarding the design and social context of this study.
+
+You've already read the [data description (link)](http://conservancy.umn.edu/bitstream/handle/11299/116327/5/explanationAAEHiphopChesley.txt) regarding how participants were recruited for participation in this study. **Now**, you need to read additional details regarding aspects of the study in the published paper: [You Know What It Is: Learning Words through Listening to Hip-Hop](https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0028248&type=printable).
+
+> Based on the design of this study and its context (African American English), what are **at least two** concerns you have? Keep in mind this critique aligns with conversations regarding data ethics. Thus, your concerns need to address the racial aspects of the design of this study.
+
+My first concern after reading about the study in detail was the demographic of students that was chosen. One line stood out to me:
+
+::: {.callout-important appearance="minimal"}
+"One participant was African-American, and another gave an ethnicity of ''bi-racial'' without specifying the two ethnicities. Therefore, data from these participants were excluded so as to lessen the likelihood that participants could be familiar with the stimulus items from their everyday lives."
+:::
+
+This is problematic in two ways: (1) not every African-American is exposed to AAE on their everyday lives. (2) Removing their responses from the study could affect the bias of the study. I believe it is better to have a diverse sample of subjects so that you can explore your hypothesis accurately. I don't think its fair to assume that if you are African-American or African you are exposed to Hip-Hop. Within my close friends, I have some African American friends which don't enjoy hip hop and listen to other types of music.
+
+While looking at the demographic of students surveyed, White is the predominant ethnic group. Having a diverse sample would allow for other metrics to be explored and for potentially racist bias to be mitigated in your study. For example, imagine a sample from a city like Los Angeles, CA, where there is a large population of many different ethnic groups. People from that area would be more exposed to other cultures that could lead to someone getting familiar with African-American culture through food, stores, music (not only hip hop), co-workers, and such.
+
+Another concern I have with the study is how the data was manipulated. This was brought up and I discussed a little bit about it in Lab 3: missing values for the variable blackWeekly, and all the series of \*Move variables were replaced with a mean of other data.
+
+This is problematic again because of bias. I think that questions like this should not be considered in a such a study because (1) they can be considered as inappropriate and is reasonable for a person not wanting to answer these questions. (2) it allows for racial charged ideas where someone who is racist would never ask help from a non-white ethnic group or someone who accuses individuals based on racial stereotypes.
+
+I also don't believe that the amount of African-Americans you know would affect the amount of slang you know, or the amount of hip-hop that you listen to. I think I have the most problems with the moving questions because it comes off as racist. It is as if researchers wanted to ask what ethnicity you trust the most, but worded the question differently as to not be triggering or come off as inappropriate.
+
+# Challenge 3 Submission
+
+Your challenge should be submitted as a **separate file**, **not** at the bottom of your Lab 3 file. Please submit your rendered HTML file. You can copy and paste this code into a **new** Quarto file. Your Challenge 3 submission should only included code necessary for completing the Challenge, nothing else.
+
+You will submit **only** your rendered HTML file. Your HTML file is required to have the following specifications in the YAML options (at the top of your document):
+
+-   be self-contained (`self-contained: true`)
+-   include your source code (`code-tools: true`)
+-   include all your code and output (`echo: true`)
+-   include **no** messages from loading in packages or the data (`messages: false`)
+
+**If any of the options are not included, your Lab 3 or Challenge 3 assignment will receive an "Incomplete" and you will be required to submit a revision.**

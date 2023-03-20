@@ -1,0 +1,145 @@
+---
+title: "Challenge 7: Incorporating Multiple Inputs"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+  warning: false
+---
+
+# **Challenge 7: Incorporating Multiple Inputs**
+
+```{r setup}
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(here)
+library(ggridges)
+library(purrr)
+```
+
+```{r importing-data}
+fish <- read_csv(here("Labs", "Lab 7", "BlackfootFish.csv"))
+```
+
+A frequently used measurement for fish health is a "condition index." [(Wikepedia article)](https://en.wikipedia.org/wiki/Condition_index_in_fish) The following simple equation can be used to calculate the approximate condition index of a fish:
+
+![](images/Screenshot%202023-03-04%20at%207.20.32%20PM.png){fig-align="center" width="241"}
+
+## **Part 1**
+
+There are specific units required for the calculation of a condition index. Length must be in millimeters, and weight must be in grams. Inspect the `length` and `weight` variables to decide if you believe these are the correct units associated with these measurements---this will likely require Googling what "typical" measurements of trout are.
+
+```{r inspecting length}
+paste("Max length of fish in dataset: ", 
+      max(fish$length, na.rm = TRUE))
+fish |>
+  filter(length == min(length)) |>
+  kable(caption = "Fish with the lowest length")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+From the output above, I believe that the units for length are already in millimeters. This is because The max length found was less than 1000, and the min was found to be 16. This does make sense from the information I found online for Rainbow, Bull, Brown trouts. Check out more info [here](https://igfa.org/igfa-world-records-search/?search_type=CommonName&search_term=brown%20trout).
+:::
+
+```{r inspecting-weight}
+fish |>
+  slice_max(weight, n = 5) |>
+  head(5) |>
+  kable(caption = "Table of max weights")
+  
+fish |>
+  slice_min(weight, n = 5) |>
+  head(5) |>
+  kable(caption = "Table of min weights")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+Inspecting the weight, I believe this is also in grams. This is because for Brook trout and other species, the maximum recorded weights surpass 4300 grams, which is around the max weight we have in our data. However, I would argue that this value is way too big, the minimum weight in the data set is interesting. The lowest weight recorded was 0, but the length was recorded as 202mm, and the second smallest weighted fish had a length of 505mm. That makes no sense, since length and weight of a trout are very heavily correlated. These are most likely errors or miscalculations in the study.
+:::
+
+### **Replacing Impossible Measurements with `NA`s**
+
+Based on your research, write function(s) to handle the unlikely / impossible measurements included in the dataset. Your function(s) should accept three inputs (1) a vector of measurements, (2) the minimum value you believe is "reasonable," and (3) the maximum value you believe is "reasonable." If a value falls outside these bounds, you should replace it with an `NA`.
+
+```{r}
+remove_outliers <- function(data, min_value, max_value) {
+  data |>
+    map_dbl(function(x) ifelse(x < min_value | x > max_value, NA, x))
+}
+```
+
+**\
+**Use your function to modify the `length` and `weight` columns of the `BlackfootFish` dataset, removing values you believe are "unreasonable."
+
+```{r modifying-length-weight}
+fish <- fish |>
+  mutate(length = remove_outliers(length, 50, 1000),
+         weight = remove_outliers(weight, 100, 4000))
+```
+
+## **Part 2**
+
+Write a function which calculates the condition index of a fish, given inputs of weight and length.
+
+```{r}
+condition_ix <- function(weight, length) {
+  return (weight / length^3) * 100
+}
+
+fish$condition <- condition_ix(fish$weight, fish$length)
+
+kable(head(fish, 5))
+```
+
+## **Part 3**
+
+Make a thoughtful visualization of how fish conditions have varied over the duration of this study.
+
+```{r scaling}
+rescale_01 <- function(x) {
+  if (! is.numeric(x)) {
+    stop(paste("Vector is not numerical but of class type: ", class(x)))
+  }
+  if (length(x) < 1) {
+    stop(paste("Vector's length must be at least 1. Got length ", length(x)))
+  }
+  # stopifnot(is.numeric(x), length(x) > 1)
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+rescale_column <- function(df, var_names){
+  df[, var_names] <- map_df(df[, var_names], rescale_01)
+  
+  return(df)
+}
+
+```
+
+```{r condition-ts}
+avg_fish <- fish |>
+  # Scaling Data so that numbers aren't that small
+  mutate(condition = rescale_01(condition)) |> 
+  group_by(year, section, species) |> # Grouping to get specific averages
+  summarize(avg_condition = mean(condition, na.rm = TRUE)) # Summarizing and getting averages
+
+ggplot(data = avg_fish,
+       mapping = aes(x = as.factor(year),
+                     y = avg_condition,
+                     color = section)) +
+  geom_line(aes(group = interaction(section, species)), size = 1) +
+  facet_wrap(~ species) + 
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  labs(title = "Average Condition of Fish in each Section Per Species during the study",
+       x = "Year",
+       y = "",
+       color = "Section")
+
+# idea for group = interaction gotten from https://stackoverflow.com/questions/9968976/group-by-two-columns-in-ggplot2
+```

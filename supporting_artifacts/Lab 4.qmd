@@ -1,0 +1,280 @@
+---
+title: "Lab 4 - Millenials and Avocado"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+  warning: false
+---
+
+# **2 Set-up and Data Importing**
+
+```{r packages}
+
+library(tidyverse)
+library(here)
+library(stringr) 
+library(knitr)
+
+```
+
+# Data Reading
+
+```{r data-readng}
+
+avocado <- read_csv(here("Labs", "Lab 4", "avocado.csv"))
+```
+
+1.  Briefly describe the dataset. What information does it contain?
+
+The dataset above shows the sales of Hass Avocados from 2015 to 2018. This data was collected weekly, so each row represents the total amount of sales per week of Hass avocados from store registers in a specific region.
+
+Here are some relevant variables and their definitions:
+
+-   `Date` - The date of the observation
+
+-   `AveragePrice` - the average price of a single avocado
+
+-   `type` - conventional or organic
+
+-   `Region` - the city or region of the observation
+
+-   `Total Volume` - Total number of avocados sold
+
+-   `4046` - Total number of avocados with PLU 4046 sold
+
+-   `4225` - Total number of avocados with PLU 4225 sold
+
+-   `4770` - Total number of avocados with PLU 4770 sold
+
+# **2 Data Cleaning**
+
+2.  Clean the data in any way you see fit.
+
+```{r clean-up}
+
+avocado_clean <- avocado |>
+  mutate(type = as.factor(type),
+         region = as.factor(region)) |>
+  rename("Small" = "4046",
+         "Large" = "4225",
+         "XLarge" = "4770")
+
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+To clean the data I decided to convert type and region to factors instead of characters.
+
+I also renamed the columns 4046, 4225, 4770 with more descriptive names based on the size of the avocados. To keep this more intuitive, I just kept the names as small, large, and xlarge instead of the actual ounces of the sizes like 3-5oz for 4046 Avocados and so on. However, just to have a record of these here are the ounces per classification of avocado:
+
+-   \~3-5oz (Small/Medium Avocado) \| #4046
+
+-   \~8-10oz (Large Avocado) \| #4225
+
+-   \~10-15oz (Extra Large Avocado) \| #4770
+:::
+
+### Dealing with Region column
+
+::: {.callout-tip appearance="minimal" icon="false"}
+The data set website is an updated data set from the original published in 2018. Please refer to the main page of the original data set for a description of the columns.
+
+In particular, look carefully at the region variable. Notice that the category "LosAngeles" is contained in "California", which is contained in "West", which is contained in "TotalUS". Think about how you want to handle this issue in your analysis.
+:::
+
+```{r region-splitting}
+# A dataframe of only Total US sales
+total_us_sales <- avocado_clean |>
+  filter(region == "TotalUS")
+
+# Dataframe for only Major Region Sales
+major_region_sales <- avocado_clean |>
+  filter(region %in% c("Midsouth", 
+                       "Northeast", 
+                       "SouthCentral", 
+                       "Southeast", 
+                       "West", 
+                       "Plains", 
+                       "GreatLakes"))
+
+
+# Dataframe for state related sales
+state_sales <- avocado_clean |>
+  filter(region %in% c("California", "SouthCarolina", "NewYork", "WestTexNewMexico"))
+
+# Dataframe for only metropolitan areas (cities)
+metro_region_sales <- avocado_clean |>
+  anti_join(total_us_sales) |> 
+  anti_join(major_region_sales) |>
+  anti_join(state_sales)
+```
+
+```{r}
+total_frame <- data.frame(region = "TotalUS")
+total_us_sales <- avocado_clean |>
+  semi_join(total_frame, by = "region")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+How many distinct geographical regions are there?
+
+In our data, we have 54 distinct regions. However, these can be separated as such:
+
+Can you categorize them into different types of geographical regions (e.g. major regions, metro regions, etc.)?
+
+I decided to categorize them as follows (creating a new dataset for each category)
+
+-   Total US sales \[1\]
+
+-   Major Regions (Midsouth, Northeast, SouthCentral, Southeast, and West) \[5\]
+
+-   Metro Regions (cities like Albany, SanFrancisco, etc) \[44\]
+
+-   States (California, SouthCarolina, NewYork, WestTexNewMexico) \[4\]
+:::
+
+# **3 Summarizing Avocado Sales**
+
+**3.** Which major region sold the most organic, small Hass avocados in 2017?
+
+```{r top-major-region}
+kable(major_region_sales |> # use the major 
+  filter(year == 2017,
+         type == "organic") |> # Filter out to only include 2017 data and organic avocado sales
+  group_by(region) |>
+  summarize(`Total Small Sold` = sum(Small)) |>
+  arrange(desc(by_group = `Total Small Sold`)))
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+The Major Region in our dataset with the most sales of organic, small Hass avocados in 2017 is the West region of the country.
+:::
+
+**4.** Use the `separate()` function to split the `Date` variable into year, month, and day. In which month is the highest volume of avocado sales?
+
+```{r best-month}
+best_seller_months <- total_us_sales |>
+  separate(col = Date,
+           into = c("year", "month", "day"),
+           sep = "-") |>
+  group_by(month) |>
+  summarize(`Total Volume Sold` = sum(`Total Volume`))
+
+kable(best_seller_months |>
+  slice_max(order_by = `Total Volume Sold`, n = 1))
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+February is the month with the most volume of avocados sold, followed very closely by January, and March. It's interesting these months are the highest. It could be explained that most people try to eat healthier as a new-year resolution, but fall off their diets later in the year. Below I plotted this trend to see it a little more clearly.
+:::
+
+```{r best-month-plot}
+ggplot(data = best_seller_months, 
+       mapping = aes(x = month,
+                     y = `Total Volume Sold`,
+                     group = 1)) +
+  geom_line() +
+  labs(title = "Trend of Sale of Hass Avocados over the year, per month",
+       x = "Month of the Year (numerical)",
+       y = "Total Number of Avocados Sold")
+```
+
+**5.** Which metro area regions sold the most total avocados? Plot side-by-side boxplots of total volume for only the five regions with the highest averages for the `Total Volume` variable.
+
+```{r top5-metro-sellers}
+top5_metro_sellers <- metro_region_sales |>
+  group_by(region) |>
+  summarize(average = mean(`Total Volume`)) |> # Get average for total volume
+  slice_max(order_by = average, n = 5)
+
+joined_top_metro <- top5_metro_sellers |>
+  left_join(metro_region_sales, by = "region") |>
+  select(region, `Total Volume`)
+
+ggplot(data = joined_top_metro,
+       mapping = aes(y = region,
+                     x = `Total Volume`)) +
+  geom_boxplot(mapping = aes(color = region)) +
+  geom_jitter(mapping = aes(color = region, alpha = 0.2)) +
+  labs(title = "Box Plots of top 5 avocado sellers by Metro Region",
+       y = "Metro Region Name",
+       x = "Average Number of Avocados Sold") +
+  theme(legend.position = "none")
+```
+
+[**Reflection:**]{.underline} **I removed the arrange() I had on average because it was unnecessary since right after it I call slice_max which already does a similar arrangement to the data. This helps efficiency as sorting a large amount of rows might take a while.**
+
+**Furthermore, I changed my code for question 2, I added the Plains, and Great Lakes to my filter. I did not know that these where major regions (my geographical knowledge of the US is not great as I have only lived here for 3 years). Now, I only have Metropolitan areas in my graph, with LA being the region with the most avocado sales.**
+
+# **4 Reshaping**
+
+```{r california-regions}
+california <- metro_region_sales |>
+  filter(region %in% c("LosAngeles", "SanDiego", "Sacramento", "SanFrancisco"))
+```
+
+**6.** In which regions is the price of organic versus conventional avocados most different? Support your answer with a few summary statistics and a visualization.
+
+```{r pivot-wider}
+df_q6 <- california |>
+  select(Date, AveragePrice, type, region) |> # select only necessary
+  pivot_wider(names_from = type, # Get conventional and organic avg price on the same line
+              values_from = AveragePrice) |>
+  mutate(diff = abs(conventional - organic)) |> # Calculate the difference
+  group_by(region) |> # group by region and not date
+  summarize(`mean diff` = mean(diff)) # calculate mean of difference
+
+ggplot(data = df_q6,
+       mapping = aes(x = region,
+                     y = `mean diff`,
+                     color = region,
+                     fill = region)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Avg Difference in Sales of Conventional and Organic Avocados in CA cities",
+       y = "Average Difference",
+       x = "California City") +
+  theme(legend.position = "none")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+From the code above, the top region with the highest average price difference between organic and conventional avocados is San Francisco.
+:::
+
+[**Reflection:**]{.underline} **Here I added a simple bar chart to show my results of which region has the biggest difference between sale of organic and conventional avocados. I totally forgot to do this but this is an important step that should've been included. Graphs are great tool get information across really fast and easily. One should never be outputting an ugly looking dataframe onto your HTML renders.**
+
+**7.** The following plot shows, for all four California regions, the proportion of the mean Hass avocado sales that are small, large, or extra large; conventional vs. organic. Recreate the plot.
+
+```{r recreate-boxplot}
+q7_df <- california |>
+  select(region, Small, Large, XLarge, type) |> # Selecting only necessary
+  group_by(region, type) |>
+  summarize(Small = mean(Small),
+            Large = mean(Large),
+            `Extra Large` = mean(XLarge)) |>
+  pivot_longer(cols = Small:`Extra Large`,
+               names_to = "size",
+               values_to = "mean_sold")
+  
+
+ggplot(data = q7_df,
+       mapping = aes(x = region,
+                     y = mean_sold,
+                     fill = fct_rev(size))) + # flip the fill ordering
+  geom_bar(position="fill", stat="identity") + # fill the whole bar
+  facet_wrap(~ type) +
+  scale_fill_manual(values = c("#aecde1",
+                               "#3c76af",
+                               "#bbde93")) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) + # move x labels to alternate
+  labs(x = "Region of CA",
+       y = "Proportion of Mean Avocados Sold",
+       fill = "Avocado Size")
+# Got fct_rev from https://nubededatos.blogspot.com/2019/11/how-to-change-stacking-order-in-stacked.html?m=0
+# got scale_x_discrete function from https://stackoverflow.com/questions/70441422/control-discrete-tick-labels-in-ggplot2-scale-x-discrete
+```

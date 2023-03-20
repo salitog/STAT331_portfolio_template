@@ -1,0 +1,309 @@
+---
+title: "Challenge 4 - Millenials and Avocado"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+  warning: false
+---
+
+# Challenge
+
+A joke in the media is that Millennials can't afford houses, because they spend all their money buying avocado toast. Let's use this dataset to address that claim.
+
+Find or make a dataset with house prices for these four California regions. Join this dataset with your California avocado dataset.
+
+Use your new joined dataset to make an argument about the relationship between house prices and avocado prices/sales.
+
+Support your argument with a plot.
+
+# Importing Libraries and Data
+
+```{r packages}
+library(tidyverse)
+library(here)
+library(lubridate)
+library(knitr)
+library(ggridges)
+```
+
+```{r avocado-data}
+avocado <- read_csv(here("Labs", "Lab 4", "avocado.csv"))
+```
+
+### Housing Dataset
+
+The data I found comes from the California Association of Realtors website, under their Historical Data databank. You can find it [here.](https://car.sharefile.com/share/view/sf7d2f2d2a69a454eab91437e9938bbe8.) I downloaded these file and uploaded to my personal github for easy access from R.
+
+```{r housing-sales}
+sales <- read_csv("https://raw.githubusercontent.com/salitog/STATS331/main/SaleChanges.csv")
+kable(tail(sales, 3))
+
+# Code for kable found here:https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/
+```
+
+The data I found is pretty straightforward, the sales dataset contains Percent Change values of Sales of Single Family houses in every city in California from 1999 to 2022. Each row represents the monthly percentage change of sales of single family houses
+
+```{r housing-prices}
+
+prices <- read_csv("https://raw.githubusercontent.com/salitog/STATS331/main/HistoricalPrices.csv")
+kable(tail(prices, 3))
+```
+
+The prices dataset contain average single family house prices from 1999 to 2022, for all cities in California. Each row represents the median price of a single family home every month for all the cities in CA like Los Angeles, San Luis Obispo, Alameda, etc.
+
+## Data Cleaning
+
+### Avocado Dataset
+
+The data was cleaned in a similar fashion to Lab 4, up to question 6 where we filter out anything but the 4 cities of California: Los Angeles, San Diego, Sacramento, and San Francisco.
+
+```{r clea-avocado}
+avocado_clean <- avocado |>
+  mutate(type = as.factor(type),
+         region = as.factor(region)) |>
+  rename("Small" = "4046",
+         "Large" = "4225",
+         "XLarge" = "4770",
+         "Type" = "type",
+         "Region" = "region") |>
+  filter(Region %in% c("LosAngeles", "SanDiego", "Sacramento", "SanFrancisco")) |>
+  separate(col = Date,
+           into = c("Year", "Month", "Day"),
+           sep = "-") |>
+  mutate(Month = month.abb[as.integer(Month)],
+         across(Year:Month, as.factor)) |> # Make year and month factors
+  select(Year:Type, Region) # Removing the first column and extra year column
+# month.abb is a constant already built in to R which I found about in this stackoverflow: https://stackoverflow.com/questions/22058393/convert-a-numeric-month-to-a-month-abbreviation
+```
+
+### Housing Datasets
+
+The two datasets I am using for this challenge are of very similar structure since they come from the same source. Because of this, the data cleaning for both is extremely similar. Although we haven't done this in class, I created a function that returns a cleaned dataset. This function is to be used only with the housing datasets I downloaded.
+
+```{r cleaning-function}
+clean_housing <- function(dataset, gsub_expr) {
+  dataset |>
+    separate(col = `Mon-Yr`,
+             into = c("Month", "Year"),
+             sep = "-") |>
+    select(Month, Year, 
+           `Los Angeles`, 
+           `San Diego`, 
+           `San Francisco`, 
+           `Sacramento`) |>
+    rename("LosAngeles" = `Los Angeles`,
+           "SanDiego" = `San Diego`, 
+           "SanFrancisco" = `San Francisco`) |>
+    filter(Year >= 15,
+           Year <= 18) |>
+    mutate(Year = as.factor(as.numeric(Year) + 2000),
+           Month = as.factor(Month),
+           across(`LosAngeles`:`Sacramento`, 
+                  function(x) as.numeric(gsub(gsub_expr, "", x))))
+}
+
+# Code for gsub() to substitute % characters taken from https://datascience.stackexchange.com/questions/15589/remove-part-of-string-in-r
+```
+
+```{r cleaning-sales}
+housing_sales <- clean_housing(dataset = sales, 
+                                gsub_expr = "%") |>
+  pivot_longer(cols = LosAngeles:Sacramento,
+               names_to = "Region",
+               values_to = "Sales%Change")
+
+kable(tail(housing_sales, 5))
+```
+
+```{r cleaning-prices}
+housing_prices <- clean_housing(dataset = prices,
+                                gsub_expr = "[$,]") |>
+  pivot_longer(cols = LosAngeles:Sacramento,
+               names_to = "Region",
+               values_to = "HousesAvgPrice")
+
+kable(tail(housing_prices, 5))
+```
+
+## Joining the Data
+
+Now that we have the data all cleaned up, I joined both our housing datasets together, and then joined that with our avocado data.
+
+```{r housing}
+housing <- housing_prices |>
+  left_join(housing_sales, 
+            by = c("Month", "Year", "Region"))
+```
+
+```{r millennials-data}
+millennials <- avocado_clean |>
+  left_join(housing, by = c("Year", "Month", "Region")) |>
+  mutate(Date = paste(Year, Month, Day, sep = "-"),
+         Date = ymd(Date),
+         Date = as.Date(Date)) |>
+  select(Date, Region, AveragePrice:`Sales%Change`, Year)
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+The data above represents both avocado and housing data. Each row, contains weekly avocado data gathered from different grocery store cashiers in a specific region, as well as monthly data for that regions average housing prices, and percent change of housing sales. I decided to keep this weekly avocado data and monthly housing data per row because (1) I could not find weekly housing data, and (2) I wouldn't want to loose a lot of information by calculating the mean for all avocado data. Maybe it can be used to do some further very specific analysis.
+:::
+
+## Trends in Housing Sales
+
+Before we jump into joint analysis of Avocados, Housing, and Millennials, I wanted to get a better understanding of the housing situation in our four cities. See below what I found:
+
+```{r}
+ggplot(data = millennials, aes(x = Date, y = `Sales%Change`)) +
+  geom_point(mapping = aes(color = Region)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "% Change of Sales of Single-Family Home over time",
+       x = "Year",
+       y = "Percent Change in House Sales") +
+  facet_wrap( ~Region ) +
+  theme(legend.position = "none")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+From the above graphs, we can see that housing sales have been decreasing over time in Los Angeles, San Diego, and Sacramento. San Francisco, surprisingly, has kept somewhat of a steady growth from 2015 to 2018.
+
+Please note that the data points look elongated on the x axis, this is because we have weekly data (each row is a different week).
+:::
+
+```{r}
+ggplot(data = millennials,
+       mapping = aes(x = Date,
+                     y = HousesAvgPrice)) +
+  geom_point(mapping = aes(color = Region)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Trend in Housing Price over time",
+       x = "Date",
+       y = "Median Price of a Single-Family Home") +
+  facet_wrap(~Region) +
+  theme(legend.position = "none")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+From above, all prices are going up in all 4 cities that we are targeting. However, San Francisco is the one seeing the greatest increase. So in conclusion, we are seeing that although prices are going up in SF, there's still been an increase in sales from 2015 to 2018.
+:::
+
+## Trends between Avocado Sales and Housing Prices
+
+```{r}
+avocado_size_mill <- millennials |>
+  pivot_longer(cols = Small:XLarge,
+               names_to = "AvocadoSize",
+               values_to = "SizeSales") |>
+ select(Date, Region, AveragePrice, `Total Volume`, Type:SizeSales)
+```
+
+```{r}
+ggplot(data = avocado_size_mill, 
+       mapping = aes(x = HousesAvgPrice,
+                     y = SizeSales,
+                     color = Region)) +
+  geom_point(alpha = 0.4) +
+  facet_grid(~AvocadoSize) +
+  labs(title = "House Average Price vs Avocado Sales (per size) by region",
+       x = "Average Price for Single-Family Home (USD $)",
+       y = "Avocados Sold") +
+  theme(legend.position = "top")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+From the graph above, we see some very interesting things. The first being that we notice is the huge spike in avocado sales in Los Angeles for all sizes of avocados, but its the most prevalent with Small sized avocados. It is also interesting to see that although average prices for homes in San Francisco are higher, the sale of avocados seems to not be affected by it. One could think that because houses are more expensive, citizens would have more money to spend on groceries.
+
+Another thing I noticed was that LA citizens buy Small avocados the most, San Francisco citizens buy Larger avocados the most. I decided to explore this further with the code below:
+:::
+
+```{r}
+most_popular_size <- avocado_size_mill |>
+  select(Year, Region, AvocadoSize, SizeSales) |>
+  group_by(Region, Year, AvocadoSize) |>
+  summarize(mean_sales = mean(SizeSales)) |>
+  group_by(Year, Region) |>
+  arrange(desc(mean_sales))
+
+ggplot(data = most_popular_size, 
+       mapping = aes(x = Region,
+                     y = mean_sales,
+                     fill = AvocadoSize)) +
+  geom_bar(position="fill", stat="identity") +
+  scale_fill_manual(values = c("#0081C9",
+                               "#FFC93C",
+                               "#82CD47")) +
+  labs(fill = "Avocado Size",
+       title = "Distribution of Sales of Avocados by Size per Region",
+       x = "Region",
+       y = "Proportion of Mean Avocados Sold by Size")
+ 
+  
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+Clearly:
+
+-   Los Angeles buys more Small avocados
+
+-   Sacramento buys more Large avocados
+
+-   San Diego (although a little hard to see) buys more Small avocados
+
+-   San Francisco buys more Large avocados
+
+We could perhaps conclude from these graphs that
+:::
+
+## Trends between Avocado Sales and Housing Sales
+
+Since the most bought avocado sizes are Small and Large, I will be focusing on these two sizes. I am trying to explore if whether an increase in the purchase of large avocados has some type of relationship to sale changes.
+
+```{r}
+avocado_diff <- millennials |>
+  select(Date, Year, Region, Small, Large, `Sales%Change`) |>
+  filter(Year == 2017) |>
+  mutate(AvocadoSizeDiff = Large - Small, # Difference between Large and Small avocado sales
+         AvocadoSizeDiff = scale(AvocadoSizeDiff), # Standardizing SalesDiff
+         HousingSaleDiff = scale(`Sales%Change`)) |> # standardizing Sales%Change 
+  pivot_longer(cols = AvocadoSizeDiff:HousingSaleDiff,
+               names_to = "Type",
+               values_to = "Change")
+
+ggplot(data = avocado_diff, 
+       mapping = aes(x = Date, 
+                     y = Change, 
+                     fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~Region) +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 45)) +
+  labs(title = "% Changes in Sales of Houses vs Sale Difference between 
+       Large and Small avocados in 2017",
+       y = "Magnitude of Sale Difference")
+```
+
+::: {.callout-note appearance="minimal" icon="false"}
+The bar chart above shows the relationship between the percentage change in sales of houses and the change in sales of large avocados to small avocados. Please note that the plot is only for 2017, and this year was selected arbitrarily (but 2018 was not chosen since we only have data until April 2018).
+
+In some instances, the bars in the graphs alternate (one goes negative while the other goes positive). This means that while, say there were more sales of Larger avocados, Housing sales went down, or vice versa. However! There are a lot of instances where this is not the case and both bars follow the same direction. This would indicate a direct correlation between the variables.
+:::
+
+## Conclusion
+
+In conclusion, I think there might be a correlation between the sale of avocados and the sale of houses in California. This is because of the last observation I made, where there are some instances that sale of larger avocados correlates to a decrease of house sales. But I don't believe its the fault of avocados. Maybe this can be because of what an avocado means to society.
+
+In recent years, avocados have been increasingly more popular because of the trend of Avocado Toast: a healthy option for those who take health seriously. Since January 2015, Bon Apetit magazine, a famous and trendy Food magazine, first released a recipe for Avocado Toasts. By March that same year, avocado toasts took over the internet \[1\]. Maybe, ever since, avocados have been a staple of beauty and health. And of course, avocados are delicious, but maybe this can go deeper. Perhaps, to some people it is more important to have a healthier or "trendier" lifestyle than saving up to buy a house. This could explain why Los Angeles, out of all the cities studied, buys the most avocados even when cities like San Francisco have wealthier people that can afford expensive houses. The presence of Hollywood stars and LA Influencers would increase the amount of people trying to replicate a "perfect and healthy" lifestyle.
+
+Although a very critical analysis of Avocado Toast, the increase in avocado sales could be a societal behavior where we have shifted from trying to pursue necessities and are drawn to please ourselves with luxury and commodity. This can be seen in the decline of housing sales \[first plot in my study\] in LA but still the sale of avocados is the highest.
+
+However, there is no evidence in my data that points to millennials to buying more avocados and saving less for a house. I can only speculate and argue what I believe could be the relationship between avocados, houses, and younger people, but if there is no data to back any statement, these statements are just speculations or hypothesis. I would love to dive deeper with better data on avocado sales when a Millennial is buying them, and the amount of Millenials that buy houses. Although a silly comparison, it can teach us significant societal behaviors of how our priorities have shifted.
+
+### References
+
+1.  https://www.washingtonpost.com/news/wonk/wp/2016/05/06/how-the-internet-became-ridiculously-obsessed-with-avocado-toast/

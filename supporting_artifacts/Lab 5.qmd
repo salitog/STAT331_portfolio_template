@@ -1,0 +1,194 @@
+---
+title: "Lab 5 - Rodents"
+author: "Sal Gutierrez"
+format:
+  html:
+    self-contained: true
+    code-tools: true
+    code-fold: true
+execute:
+  echo: true
+  error: false
+  message: false
+  warning: false
+---
+
+# Setup
+
+```{r}
+library(tidyverse)
+library(here)
+library(forcats)
+library(lubridate)
+
+```
+
+# Importing Data
+
+Importing surveys.csv and also starting off from the last graph in Lab 2
+
+```{r}
+surveys <- read_csv(here("Labs", "Lab 2", "surveys.csv"), show_col_types = FALSE)
+```
+
+## Data Context
+
+The Portal Project is a long-term ecological study being conducted near Portal, AZ. Since 1977, the site has been used to study the interactions among rodents, ants and plants and their respective responses to climate. To study the interactions among organisms, we experimentally manipulate access to 24 study plots. This study has produced over 100 scientific papers and is one of the longest running ecological studies in the U.S.
+
+We will be investigating the animal species diversity and weights found within plots at the Portal study site. The dataset is stored as a comma separated value (CSV) file. Each row holds information for a single animal, and the columns represent:
+
+| Column          | Description                        |
+|-----------------|------------------------------------|
+| record_id       | Unique id for the observation      |
+| month           | month of observation               |
+| day             | day of observation                 |
+| year            | year of observation                |
+| plot_id         | ID of a particular plot            |
+| species_id      | 2-letter code                      |
+| sex             | sex of animal ("M", "F")           |
+| hindfoot_length | length of the hindfoot in mm       |
+| weight          | weight of the animal in grams      |
+| genus           | genus of animal                    |
+| species         | species of animal                  |
+| taxon           | e.g. Rodent, Reptile, Bird, Rabbit |
+| plot_type       | type of plot                       |
+
+# Revisiting Lab 2
+
+**1. Reorder the species so the boxplots for weights go in descending order (largest to smallest).**
+
+```{r lab2-q13}
+ggplot(data = surveys, 
+       mapping = aes(x = weight,
+                     y = fct_reorder(species, weight, .fun = median))
+       ) + 
+  geom_jitter(alpha = .3,
+              color = "darkseagreen") +
+  geom_boxplot() +
+  geom_text(aes(label = species), hjust = "right", x = 250, color = "black") +
+  labs(title = "Distribution of Weight within each Species",
+       x = "Weight (g)",
+       y = "Species of Animal") + 
+    theme(legend.position = "none", # removing legend
+          axis.line.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank()) 
+```
+
+## **Time-Series Plot**
+
+**1. Create a visualization how weights vary for each genus over the duration of the study.**
+
+```{r weight-overtime}
+surveys_summary <- surveys |>
+  mutate(Date = ymd(paste(year, month, day, sep = "-")))
+
+# Create time series plot
+ggplot(data = surveys_summary, 
+       aes(x = Date, 
+           y = weight, 
+           color = genus)) +
+  geom_line() +
+  labs(title = "Weight Variations by Genus over the Study Duration",
+       x = "Date", y = "Mean Weight (g)")
+```
+
+**2. Calculate and plot the [mean]{.underline} weight for each genus for each year.**
+
+```{r mean-weight-overtime}
+
+# Create a date column from year, month, and day columns
+surveys_summary_by_year <- surveys_summary |>
+  group_by(genus, year) |>
+  summarize(mean_weight = mean(weight))
+
+# Create time series plot
+  ggplot(data = surveys_summary_by_year, 
+         aes(x = year, 
+             y = mean_weight, 
+             color = genus)) +
+  geom_line() +
+  labs(title = "Mean Weight by Genus and Year", 
+       x = "Year", 
+       y = "Mean Weight (g)")
+```
+
+**3. Reorder the lines so the mean weights go in descending order (largest to smallest).**
+
+**4. Now that you've reordered the lines, look at your legend's label. That's terrible! Let's give the legend a new title *and* move the information from the y-axis to the plot title.**
+
+```{r}
+ggplot(data = surveys_summary_by_year, 
+       aes(x = year, 
+           y = mean_weight, 
+           color = fct_reorder(genus, mean_weight, .desc = TRUE))) +
+  geom_line() +
+  labs(title = "Time Series of Mean Weight (g) Change per Genus", 
+       x = "Year", 
+       y = "",
+       color = "Genus of Rodents")
+```
+
+[**Reflection:**]{.underline} **Here, I removed the y-axis label and made the title of the graph more descriptive. I did this because it is more readable and a reader does not have to tilt their head.**
+
+[**Reflection 2:**]{.underline} **Here, I included the units on the title of the graph. It was an oversight not including them in the first place. But it is necessary to include them for our readers :)**
+
+# **Captures over the Week**
+
+**1. Create a visualization of the number of rodents captured each day of the week.**
+
+**2. Change the order of the day of the week to go Monday through Sunday.**
+
+```{r rodents-captured}
+rodents <- surveys_summary |>
+  mutate(day_of_week = weekdays(Date)) |>
+  filter(taxa == "Rodent",
+         !is.na(day_of_week)) |>
+  group_by(day_of_week) |>
+  summarize(count = n())
+
+order_of_days <- c("Monday", 
+                   "Tuesday", 
+                   "Wednesday", 
+                   "Thursday", 
+                   "Friday", 
+                   "Saturday", 
+                   "Sunday")
+
+ggplot(rodents, 
+       aes(x = factor(day_of_week, levels = order_of_days),
+           y = count,
+           color = day_of_week,
+           fill = day_of_week)) +
+  geom_col() +
+  labs(title = "Number of Rodents Captured Each Day of the Week",
+       x = "Day of the Week", 
+       y = "Count of Rodents Captured") +
+  theme(legend.position = "none")
+```
+
+**3. Collapse Monday through Friday into a `"Weekday"` level, and collapse Saturday and Sunday into a `"Weekend"` level. Plot the number of rodents captured between the two groups.**
+
+```{r week-days-ends}
+weekday_names = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")
+weekend_names = c("Saturday", "Sunday")
+rodents_ <- rodents |>
+  mutate(week_level = fct_collapse(day_of_week, 
+                                   "Weekday" = weekday_names,
+                                   "Weekend" = weekend_names)) |>
+  group_by(week_level) |>
+  summarize(total = sum(count))
+
+ggplot(data = rodents_,
+        mapping = aes(x = week_level,
+                      y = total,
+                      color = week_level,
+                      fill = week_level)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Number of Rodents Captured by Week Type",
+       x = "Week Level",
+       y = "Number of Rodents Captured") +
+  theme(legend.position = "none")
+```
+
+[**Reflection:**]{.underline} **Here I used fct_collapse instead of an ifelse function as asked by the question. Next time I'll read the instructions before submitting just to make sure I used the correct functions :)**
