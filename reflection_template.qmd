@@ -146,10 +146,18 @@ joined_top_metro <- top5_metro_sellers |>
   select(region, `Total Volume`)
 ```
 
--   `right_join()`:
+-   `right_join()`: Challenge 9 - Filtering Multiple Values
 
 ```{r wd-5-right}
-
+totals |>
+  right_join(allans2) |>
+  mutate(Allan = (Allan / Total) * 100,
+         Allen = (Allen / Total) * 100,
+         Alan = (Alan / Total) * 100) |>
+  select(-Total) |>
+  kable(align = c("c", "c", "c", "c")) |>
+  kable_styling(font_size = 14) |>
+  add_header_above(header = c("", "%", "%", "%"))
 ```
 
 -   `inner_join()`: Preview Activity 11 - Question 1
@@ -168,10 +176,12 @@ prof_info |>
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
 
--   `semi_join()`:
+-   `semi_join()`: Lab 4 - Dealing with Region column. This is from an unsubmitted revision.
 
 ```{r wd-6-semi}
-
+total_frame <- data.frame(region = "TotalUS")
+total_us_sales <- avocado_clean |>
+  semi_join(total_frame, by = "region")
 ```
 
 -   `anti_join()`: Lab 4 - Question 2
@@ -461,10 +471,15 @@ hiphop_clean |>
   summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   Example 2:
+-   Example 2: Challenge 4 - Trends between Avocado sales and Housing Prices
 
 ```{r dvs-4-2}
-
+most_popular_size <- avocado_size_mill |>
+  select(Year, Region, AvocadoSize, SizeSales) |>
+  group_by(Region, Year, AvocadoSize) |>
+  summarize(mean_sales = mean(SizeSales)) |>
+  group_by(Year, Region) |>
+  arrange(desc(mean_sales))
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -494,16 +509,34 @@ q7_df <- california |>
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
 
--   Example 1:
+-   Example 1: Challenge 9 - Filtering Multiple Values
 
 ```{r dvs-6-1}
+totals <- allans2 |>
+  group_by(State) |>
+  summarize(Total = sum(Allan, Allen, Alan))
 
+allans2 |>
+  left_join(totals) |>
+  mutate(Allan = (Allan / Total) * 100,
+         Allen = (Allen / Total) * 100,
+         Alan = (Alan / Total) * 100) |>
+  select(-Total) |>
+  kable(align = c("c", "c", "c", "c")) |>
+  kable_styling(font_size = 14) |>
+  add_header_above(header = c("", "%", "%", "%"))
 ```
 
--   Example 2:
+-   Example 2: Challenge 4 - Housing Datasets
 
 ```{r dvs-6-2}
+housing_prices <- clean_housing(dataset = prices,
+                                gsub_expr = "[$,]") |>
+  pivot_longer(cols = LosAngeles:Sacramento,
+               names_to = "Region",
+               values_to = "HousesAvgPrice")
 
+kable(tail(housing_prices, 5))
 ```
 
 **DVS-7: I show creativity in my tables.**
@@ -522,10 +555,16 @@ allans2 |>
   add_header_above(header = c("", "%", "%", "%"))
 ```
 
--   Example 2:
+-   Example 2: Challenge 4 - Housing Data Sets
 
 ```{r dvs-7-2}
+housing_sales <- clean_housing(dataset = sales, 
+                                gsub_expr = "%") |>
+  pivot_longer(cols = LosAngeles:Sacramento,
+               names_to = "Region",
+               values_to = "Sales%Change")
 
+kable(tail(housing_sales, 5))
 ```
 
 ## Program Efficiency
@@ -658,68 +697,127 @@ hiphop_clean |>
   summarize(max_mean = max(across(intl:unclassifiable, mean)))
 ```
 
--   `map()` functions (Provide 2 Examples): Lab 8 - Question 4
+-   `map()` functions (Provide 2 Examples):
 
-```{r pe-3-map-1}
-s <- map(1:12, function(x) sing_line(xmas, line = x, phrase_col = Full.Phrase))
-print(s)
-```
+    -   Example 1: Lab 8 - Question
+
+    ```{r pe-3-map-1}
+    s <- map(1:12, function(x) sing_line(xmas, line = x, phrase_col = Full.Phrase))
+    print(s)
+    ```
+
+    -   Example 2: Lab 7 - Question 2.1
 
 ```{r pe-3-map-2}
-
+fish |>
+  map_int(~sum(is.na(.))) |> # counting all NAs in all variables
+  as.data.frame() |> # converting to a dataframe to use dyplr functions
+  rename(NaSum = 1) # renames the first column name to NaSum
 ```
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   Example 1:
+-   Example 1: Lab 7 - Part 1
 
 ```{r pe-4-1}
-
+  fish |>
+  slice_max(weight, n = 5) |>
+  head(5) |>
+  kable(caption = "Table of max weights")
 ```
 
--   Example 2:
+-   Example 2: Lab 3 - Question 14
 
 ```{r pe-4-2}
-
+hiphop_clean |>
+  select(c("subj", "sex", "age", "ethnic_ctgr", "city", "bieber", "pop")) |>
+  filter(ethnic_ctgr == "white",
+           sex == "Male",
+           age >= 17, 
+           age <= 23,
+           city >= 10000,
+           city <= 60000) |>
+  slice_max(order_by = bieber, n = 1) |>
+  distinct(subj, .keep_all = TRUE)
 ```
 
 ## Data Simulation & Modeling
 
 **DSM-1: I can simulate data from a *variety* of probability models.**
 
--   Example 1:
+-   Example 1: Practice Activity 9.2 - Warm Up
 
 ```{r dsm-1-1}
+# Warm Up
+# What is the 95th percentile for trumpet weight?
+qunif(.95, 1.5, 3.5)
 
+# What is the 10th percentile for trombone weight?
+qnorm(.10, 4.6, 0.8)
+
+# About what percent of trombones do you expect to 
+# be more than 5 pounds?
+1 - pnorm(5, 4.6, 0.8)
+
+# About what percent of reed instruments do you expect 
+# to be more than 5 pounds?
+1 - pchisq(5, 4)
+
+# Simulate 100 random trombone weights.
+trombones <- rnorm(100, 4.6, 0.8)
+sum(trombones < 4) # How many of them were below 4 pounds?
 ```
 
--   Example 2:
+-   Example 2: Practice Activity 9.2 - Catching a Con
 
 ```{r dsm-1-2}
+set.seed(1957)
 
+music_man <- function(n_tromb, n_cor, n_reed){
+  
+  # Random generation of different distribution functions
+  trombones <- rnorm(n_tromb, 4.6, .8)
+  cornets <- runif(n_cor, 1.5, 3.5)
+  reeds <- rchisq(n_reed, 4)
+  
+  return(sum(trombones) + sum(cornets) + sum(reeds))
+  
+}
+
+my_weights <- map_dbl(.x = 1:1000, 
+                      .f = ~ music_man(n_tromb = 76, 
+                                       n_cor = 110,
+                                       n_reed = 1035)) 
+sum(my_weights < 4532)
 ```
 
 **DSM-2: I can fit a linear regression and extract necessary summary measures.**
 
--   Example 1:
+-   Example 1: Lab 9 - Question 4
 
 ```{r dsm-2-1}
+model <- lm(num_babies ~ Year, 
+                 data = allison_summary)
 
+kable(tidy(model))
 ```
 
--   Example 2:
+-   Example 2: Practice Activity 1 - Question 2
 
 ```{r dsm-2-2}
+model <- lm(weight_before ~ weight_after,
+            data = animals)
 
+kable(tidy(model))
 ```
 
 ## Revising My Thinking
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
 
-So far, I\'ve received growing grades on some of my questions for labs and challenges. In almost every single assignment, I've made revisions to get an S on almost all G's I had. However, I have not stopped at just changing the code those questions with G's, but try to satisfy all suggestions or comments that the professor, or a classmate have left on my assignments even if I had an S grade. Every time I changed anything on my submitted code, I included a thoughtful reflection, explaining what I did, why I did it, and what I learned.
+So far, I've received growing grades on some of my questions for labs and challenges. In almost every single assignment, I've made revisions to get an S on almost all G's I had. However, I have not stopped at just changing the code those questions with G's, but try to satisfy all suggestions or comments that the professor, or a classmate have left on my assignments even if I had an S grade. Every time I changed anything on my submitted code, I included a thoughtful reflection, explaining what I did, why I did it, and what I learned.
 
-Further, I have been able to use what I\'ve learned from my reflections in other assignments. For example, for lab three I used the function mutate_at, which was already preceded by the across function. I then learned how to use the across function and used it in the rest of my coming labs and challenges.
+Further, I have been able to use what I've learned from my reflections in other assignments. For example, for lab three I used the function mutate_at, which was already preceded by the across function. I then learned how to use the across function and used it in the rest of my coming labs and challenges.
 
 ## Extending My Thinking
 
@@ -733,8 +831,12 @@ So far, the assignment I've enjoyed the most is Challenge 4, the analysis of avo
 
 <!-- Include an image of feedback you gave that you are proud of (either in a peer review or in Discord) -->
 
-Peer review is very important to me as that is the main way I can make improvements to my code. I try to complete my peer reviews as soon as I possibly can. I try to refer to the style guide as much as possible. Sometimes, I find that other people do the same mistakes I have done before so I try to help with constructive feedback and a solution to their issues. I am always trying to look thoroughly through my peers\' code and try to identify the areas where they can improve.
+Peer review is very important to me as that is the main way I can make improvements to my code. I try to complete my peer reviews as soon as I possibly can. I try to refer to the style guide as much as possible. Sometimes, I find that other people do the same mistakes I have done before so I try to help with constructive feedback and a solution to their issues. I am always trying to look thoroughly through my peers' code and try to identify the areas where they can improve. However, I failed to provide feedback for Lab 9
 
-As for when I am working with my Lab group, I\'ve tried to give them the opportunity to take the writer role so that the members who are not normally coding a lot, can practice their coding. I try to make sure to give my group mates time to think over the problems instead of taking over the conversation and solution ideation. Even though I am a computer science major and code every day, I take a step back and let my group mates come up with different ideas to improve our code without me taking control of the keyboard or discussion. There has been many times where they\'ve come up with code that I would\'ve never thought of. Having this diverse set of skills in my group is specially important because everybody brings different perspectives and ideas to the table.
+As for when I am working with my Lab group, I've tried to give them the opportunity to take the writer role so that the members who are not normally coding a lot, can practice their coding. I try to make sure to give my group mates time to think over the problems instead of taking over the conversation and solution ideation. Even though I am a computer science major and code every day, I take a step back and let my group mates come up with different ideas to improve our code without me taking control of the keyboard or discussion. There has been many times where they've come up with code that I would've never thought of. Having this diverse set of skills in my group is specially important because everybody brings different perspectives and ideas to the table.
 
 I am sadly missing in this area where I could be helping people on discord. However, because of my work load, I catch myself working on labs and assignments close to the due date, and by the time people have already answered most questions. But, I will try to work on this and be more participating on the Discord Server.
+
+Below is a screenshot of my favorite feedback this quarter. I complemented what Eva did good and also included some helpful tips for her code and visuals.
+
+![](images/Screenshot%202023-03-19%20at%205.38.27%20PM.png){fig-align="center" width="271"}

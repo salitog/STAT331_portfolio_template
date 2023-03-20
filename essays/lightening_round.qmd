@@ -1,5 +1,32 @@
 ---
 title: "Lightening Round Essays"
-format: html
+author: "Sal Gutierrez"
+format: 
+  html: 
+    self-contained: true
+layout: margin-left
 editor: visual
+execute: 
+  eval: false
+  echo: true
 ---
+
+#### Finish the sentence with another student's name: "If \[Student\] doesn't earn an A, then nobody should, because..." Explain your choice and your reasoning.
+
+If Daltzwer Oliveros doesn't earn an A, then nobody should, because he has been putting in a lot of work in this class. It is extremely hard to go into a class without any prior coding experience and he was able to understand and code everything perfectly. He was a team player, great team leader, and just all round an awesome person to work with.
+
+#### What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+
+I think the hardest part of this class was staying on top of all the Preview Activities, Practice Activities, and Peer Reviews. Sometimes, I would forget or not have enough time to comment on peer's code. It was also a little hard to find these on canvas because sometimes email notifications would not be sent out and they wouldn't show up on your To Do list.
+
+#### What was the easiest part of the class for you? Explain why.
+
+For me, coding was the easiest part, but that is only because I am a CS major. We learn to code in new languages in just a few weeks or days so coming to a new language like R, that is already so similar to Python when using libraries like Pandas, and numpy, is routine. Nonetheless, knowing how to code something is not the same as knowing how to solve the problems in the labs, it just makes it easier to understand the syntax and write your solutions faster.
+
+#### What part of the class surprised or interested you the most? Explain why.
+
+I really enjoyed the analysis part of the class. Challenge 4 was by far my favorite since it was open to us choose the data, chop it up and analyze it the way we wanted.
+
+#### Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning
+
+Schedule all your assignments for the week on your calendar because it is easy to forget what is due and when. Also, keep up with your revisions as best you can because they can add up quickly. Try to use the least amount of tokens for revisions because they are very useful when you're drowning and can't complete a lab or challenge in time, but maybe using them for revisions is not the best use of a token.

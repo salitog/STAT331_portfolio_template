@@ -1,5 +1,50 @@
 ---
 title: "My Growth as a Data Scientist"
-format: html
+author: "Sal Gutierrez"
+format: 
+  html: 
+    self-contained: true
+layout: margin-left
 editor: visual
+execute: 
+  eval: false
+  echo: true
 ---
+
+<!--Describe how you have improved as a practitioner and student of data science this quarter through your work in the course. Focus specifically on data science concepts and the skills we employed in learning them. Don’t just give a laundry list of topics that you learned (those are in the syllabus, so we know them already). Focus instead on a small number of specific areas of growth for you that happened in STAT 331. Identify at least one artifact in your portfolio that illustrates each area of growth. Explain in this essay how this artifact shows growth in the way you are describing. -->
+
+I had little experience in Data Science before this class. However, I can confidently say that after it I can take some data and run some simple analysis on it and come up with some conclusions about it. Here are some skills I think I've learnt the most during this class:
+
+### Document Readability
+
+Something that I really didn't pay attention to before was the readability of my code. It is something that is very important for when you share your code with other people. It is important to keep this in mind because once we graduate we will work in some team for some company and collaboration will always be a part of our professional lives as Computer or Data Scientists.
+
+For example, my Lab 4 - Question 6 code below:
+
+```{r}
+california |>
+  select(Date, AveragePrice, type, region) |> # select only necessary
+  pivot_wider(names_from = type, # Get conventional and organic avg price on the same line
+              values_from = AveragePrice) |>
+  mutate(diff = abs(conventional - organic)) |> # Calculate the difference
+  group_by(region) |> # group by region and not date
+  summarize(`mean diff` = mean(diff)) # calculate mean of difference
+```
+
+I've employed appropriate new lines, and commented any relevant code so that anybody who reads this knows whats going on.
+
+Document readability also includes how to format your document so that it looks professional outside of just the code chunks. Using headers, knitr tables, YAML options, and libraries like KableExtra, Knitr, and such are goods ways to format your document so that, when rendered, it is presentable. There are stereotypes that engineers can't communicate correctly or effectively, so hopefully the people who took this class will break this stereotype!
+
+### Problem Solving & Analysis of Data
+
+This I think is the biggest takeaway from this class. We worked with so many different data sets and performed different analysis on this data which included cleaning the data, transforming it, plotting, explaining any results or coming up with a conclusion. Not many classes give you this opportunity, but it helps develop a sense of how to process data and think about the why's to any patterns or relationships that you can visualize through plots or other visuals.
+
+The best example of this, for me, is Challenge 4. Below I've attached a screenshot of one of the plots I made for that lab, and the conclusion I drove from it.
+
+![](images/Screenshot%202023-03-19%20at%206.19.06%20PM.png){fig-align="center"}
+
+If I could, I would put all my challenge 4 here because it supports this learning artifact of Problem Solving and Analysis. But for the sake of presentation, I won't. But please refer to my supporting artifacts to find it.
+
+You can learn the syntax of R or any other language online since there are so many different resources out there. But you won't get an experience like this class where you can do your analysis on different data sets, submit assignments, and get as much feedback as possible. Having this system allows you to go back, learn from your mistakes, and in the process, learn what works and what doesn't. Exposing a student to many different datasets is awesome as you are not always doing the same thing. Every week we had to work with something new, and implement more sophisticated code as well. This combination increases your problem solving skills which I think is the best thing you can take out of a class like this.
+
+Overall, I think this class taught me a lot of skills that lay outside of just knowing how to code and plot data. It is very important that not only for Data Scientists but also any person who writes code to learn all these at some point in the college degree.
